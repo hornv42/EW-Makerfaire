@@ -42,4 +42,13 @@ app.get('/results/:userID', (req, res) => {
   });
 });
 
+app.get('/results/:userID/:stationID', (req, res) => {
+  var userID = req.params.userID;
+  var stationID = req.params.stationID;
+
+  db.all('SELECT * FROM results WHERE userID = ? AND stationID = ?', [userID, stationID], (err, rows) => {
+    res.send(rows);
+  });
+});
+
 app.listen(port);
