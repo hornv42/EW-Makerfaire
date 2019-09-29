@@ -28,5 +28,18 @@ app.get('/users/:userID', (req, res) => {
   });
 });
 
+app.get('/results/:userID', (req, res) => {
+  var userID = req.params.userID;
+
+  db.all('SELECT * FROM results WHERE userID = ?', [userID], (err, rows) => {
+    if (err) {
+      res.status(404);
+      res.end();
+    }
+    else {
+      res.send(rows);
+    }
+  });
+});
 
 app.listen(port);
