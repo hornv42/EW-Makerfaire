@@ -14,8 +14,10 @@ app.get('/users', (req, res) => {
   });
 });
 
-app.get('/users/:userId', (req, res) => {
-  db.get('SELECT * FROM users where userID = ?', [req.params.userId], (err, row) => {
+app.get('/users/:userID', (req, res) => {
+  var userID = req.params.userID;
+
+  db.get('SELECT * FROM users where userID = ?', [userID], (err, row) => {
     if (err) {
       res.status(404);
       res.end();
