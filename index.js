@@ -13,8 +13,7 @@ app.get('/users', (req, res) => {
 });
 
 app.get('/users/:userId', (req, res) => {
-  /// databse query for user ID 'userID'
-  db.get('SELECT * FROM users where id = ?', [req.params.userId], (err, row) => {
+  db.get('SELECT * FROM users where userID = ?', [req.params.userId], (err, row) => {
     if (err) {
       res.status(404);
       res.end();
