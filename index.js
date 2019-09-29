@@ -24,3 +24,5 @@ app.get('/users/:userId', (req, res) => {
   });
 });
 
+
+app.listen(port);
