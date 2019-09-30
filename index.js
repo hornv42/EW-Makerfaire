@@ -77,4 +77,63 @@ app.get('/results/:userID/:stationID', (req, res) => {
   });
 });
 
+app.post('/answer', async (req, res) => {
+  var body = req.body;
+
+  var userID = body.userID;
+  var stationID = body.stationID;
+  var attemptAnswer = body.answer;
+  var timestamp = body.timestamp;
+
+  if (userID == undefined
+      || stationID == undefined
+      || attemptAnswer == undefined
+      || timestamp == undefined) {
+    res.status(400);
+    res.send("Missing parameters");
+  }
+  else {
+    db.get('SELECT * FROM stations WHERE stationID = ?', [stationID], (err, row) => {
+      if (err) {
+        res.status(500);
+        res.send(err);
+      }
+      else if (row == undefined) {
+        res.status(404);
+        res.send("No such station '" + stationID.toString() + "'");
+      }
+      else {
+        var realAnswer = row.answer;
+
+        db.all('SELECT * FROM results WHERE userID = ? AND stationID = ?', [userID, stationID], (err, rows) => {
+          if (err) {
+            res.status(500);
+            res.send(err);
+          }
+          else if (rows.length > 2) {
+            res.status(400);
+            res.send("Too many attempts");
+          }
+          else {
+            db.run('INSERT INTO results (userID, stationID, userAnswer, timestamp) VALUES(?, ?, ?, ?)',
+                   [userID, stationID, attemptAnswer, timestamp],
+                   (err) =>
+                   {
+                     if (err) {
+                       res.status(500);
+                       console.log(err);
+                       res.send(err);
+                     }
+                     else {
+                       res.send(userAnswer == realAnswer);
+                     }
+                   });
+          }
+        });
+      }
+    });
+  }
+});
+
+
 app.listen(port);
