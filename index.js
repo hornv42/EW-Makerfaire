@@ -5,15 +5,16 @@ const app = express();
 app.use(express.json());
 
 const db = new sqlite3.Database('./database.db');
-const port = 3000
+const port = 3000;
 
-
+// Get list of user IDs
 app.get('/users', (req, res) => {
   db.all('SELECT userID FROM users', [], (err, rows) => {
     res.send(rows.map(r => r.userID));
   });
 });
 
+// Get information for user with specific ID
 app.get('/users/:userID', (req, res) => {
   var userID = req.params.userID;
 
@@ -28,6 +29,7 @@ app.get('/users/:userID', (req, res) => {
   });
 });
 
+// Get the results of a specific user
 app.get('/results/:userID', (req, res) => {
   var userID = req.params.userID;
 
@@ -42,6 +44,7 @@ app.get('/results/:userID', (req, res) => {
   });
 });
 
+// Get the results of a specific user at a specific station
 app.get('/results/:userID/:stationID', (req, res) => {
   var userID = req.params.userID;
   var stationID = req.params.stationID;
