@@ -29,6 +29,29 @@ app.get('/users/:userID', (req, res) => {
   });
 });
 
+// Create or update user information for userID
+app.post('/users/:userID', (req, res) => {
+  var userID = req.params.userID;
+  var nickName = req.body.nickName;
+
+  if (nickName == undefined) {
+    res.status(400);
+    res.send("Missing parameters");
+  }
+  else {
+    db.run('INSERT OR REPLACE INTO users (userID, nickName) VALUES(?, ?)', [userID, nickName], (err) => {
+      if (err) {
+        res.status(500);
+        res.send(err.toString());
+      }
+      else {
+        res.status(200);
+        res.end();
+      }
+    });
+  }
+});
+
 // Get the results of a specific user
 app.get('/results/:userID', (req, res) => {
   var userID = req.params.userID;
