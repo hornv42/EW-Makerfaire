@@ -8,6 +8,33 @@ const db = new sqlite3.Database('./database.db');
 const port = 3000;
 const maxNumAttempts = 3;
 
+var sessionID = undefined;
+
+app.get('/session', (req, res) => {
+  if (sessionID == undefined) {
+    res.status(500);
+    res.send("No session active.");
+  }
+  else {
+    res.status(200);
+    res.send({ sessionID: sessionID });
+  }
+});
+
+app.post('/session', (req, res) => {
+  var newSession = req.body.sessionID;
+
+  if (!Number.isInteger(newSession)) {
+    res.status(400);
+    res.send("Invalid session ID: '" + String(sessionID) + "'");
+  }
+  else {
+    sessionID = newSession;
+    res.status(200);
+    res.end();
+  }
+});
+
 // Get list of user IDs
 app.get('/users', (req, res) => {
   db.all('SELECT userID FROM users', [], (err, rows) => {

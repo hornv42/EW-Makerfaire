@@ -21,6 +21,43 @@ The following endpoints are working at this time:
 multiple play sessions (one per each day). But the data returned should be
 similar.
 
+### /session (GET)
+Returns the active session, or error if no session active.
+
+#### Spec
+Session is returned as an object:
+
+| Name      | Type    | Description                            |
+|:----------|:--------|:---------------------------------------|
+| sessionID | integer | The ID of the currently active session |
+
+#### Example
+
+``` json
+{
+  "sessionID": 5
+}
+```
+
+### /session (POST)
+Set the currently active session
+
+#### Spec
+Session is given as:
+
+| Name      | Type    | Description                  |
+|:----------|:--------|:-----------------------------|
+| sessionID | integer | The ID of the session to set |
+
+
+#### Example
+
+``` json
+{
+  "sessionID": 5
+}
+```
+
 ### /users (GET)
 Returns registered user ID's
 
@@ -124,7 +161,7 @@ Each object consists of:
   }
 ]
 ```
-### /userDetail/<userID>
+### /userDetail/<sessionID>/<userID> (GET)
 Returns a user's detailed status, including the answers they've given at each of
 the stations, as well as information about the station.
 
