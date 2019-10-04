@@ -161,7 +161,7 @@ Each object consists of:
   }
 ]
 ```
-### /userDetail/<sessionID>/<userID> (GET)
+### /userDetail/userID/<sessionID>/<userID> (GET)
 Returns a user's detailed status, including the answers they've given at each of
 the stations, as well as information about the station.
 
