@@ -127,7 +127,7 @@ true
 ## WIP Endpoints
 The following either haven't been implemented yet or haven't been tested.
 
-### /<sessionID>/leaderboard (GET)
+### /\<sessionID\>/leaderboard (GET)
 Returns an user scores, tracking the number questions they've answered correctly
 and incorrectly.
 
@@ -161,7 +161,7 @@ Each object consists of:
   }
 ]
 ```
-### /userDetail/userID/<sessionID>/<userID> (GET)
+### /userDetail/\<sessionID\>/\<userID\> (GET)
 Returns a user's detailed status, including the answers they've given at each of
 the stations, as well as information about the station.
 
