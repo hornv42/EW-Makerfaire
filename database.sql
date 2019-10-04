@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS "results" (
   "resultID"	INTEGER PRIMARY KEY AUTOINCREMENT,
   "userID"	INTEGER,
   "stationID"	INTEGER,
-  "userAnswer"	TEXT,
+  "userAnswer"	INTEGER,
   "timestamp"	INTEGER
 );
 CREATE TABLE IF NOT EXISTS "users" (
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS "stations" (
   "stationID"	INTEGER PRIMARY KEY AUTOINCREMENT,
   "name"	TEXT,
   "question"	TEXT,
-  "answer"	TEXT,
+  "answer"	INTEGER,
   "x_val"	REAL,
   "y_val"	REAL
 );

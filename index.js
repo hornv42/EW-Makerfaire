@@ -6,6 +6,7 @@ app.use(express.json());
 
 const db = new sqlite3.Database('./database.db');
 const port = 3000;
+const maxNumAttempts = 3;
 
 // Get list of user IDs
 app.get('/users', (req, res) => {
@@ -77,23 +78,23 @@ app.get('/results/:userID/:stationID', (req, res) => {
   });
 });
 
-app.post('/answer', async (req, res) => {
+app.post('/answer', (req, res) => {
+  var timestamp = Date.now();
+
   var body = req.body;
 
   var userID = body.userID;
   var stationID = body.stationID;
   var attemptAnswer = body.answer;
-  var timestamp = body.timestamp;
 
   if (userID == undefined
       || stationID == undefined
-      || attemptAnswer == undefined
-      || timestamp == undefined) {
+      || attemptAnswer == undefined) {
     res.status(400);
     res.send("Missing parameters");
   }
   else {
-    db.get('SELECT * FROM stations WHERE stationID = ?', [stationID], (err, row) => {
+    db.get('SELECT answer FROM stations WHERE stationID = ?', [stationID], (err, row) => {
       if (err) {
         res.status(500);
         res.send(err);
@@ -105,12 +106,12 @@ app.post('/answer', async (req, res) => {
       else {
         var realAnswer = row.answer;
 
-        db.all('SELECT * FROM results WHERE userID = ? AND stationID = ?', [userID, stationID], (err, rows) => {
+        db.get('SELECT COUNT(*) as count FROM results WHERE userID = ? AND stationID = ?', [userID, stationID], (err, count) => {
           if (err) {
             res.status(500);
-            res.send(err);
+            res.send("Error querying user");
           }
-          else if (rows.length > 2) {
+          else if (count.count >= maxNumAttempts) {
             res.status(400);
             res.send("Too many attempts");
           }
@@ -125,7 +126,8 @@ app.post('/answer', async (req, res) => {
                        res.send(err);
                      }
                      else {
-                       res.send(userAnswer == realAnswer);
+                       res.status(200);
+                       res.send(attemptAnswer == realAnswer);
                      }
                    });
           }
@@ -134,6 +136,5 @@ app.post('/answer', async (req, res) => {
     });
   }
 });
-
 
 app.listen(port);

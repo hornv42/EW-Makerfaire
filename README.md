@@ -53,10 +53,44 @@ Each object consists of:
 }
 ```
 
+### /answer (POST)
+Attempt to answer a question.
+
+This is meant to be invoked by the boxes in order to submit a user answer.
+
+#### Spec
+The caller must provide an object like:
+
+| Name      | Type    | Description                                       |
+|:----------|:--------|:--------------------------------------------------|
+| userID    | integer | The ID of the user answering the question.        |
+| stationID | integer | The ID of the station the user is answering from. |
+| answer    | integer | The attempted answer to the question.             |
+
+On success (HTTP 200), returns `true`, if the answer was correct, or `false`.
+Otherwise returns error status.
+Returns HTTP 400 if user has attempted to answer the same question too many times.
+
+#### Example
+
+**Input**
+``` json
+{
+  "userID": 5,
+  "stationID": 2,
+  "answer": 128
+}
+```
+**Output**
+
+``` json
+true
+```
+
 ## WIP Endpoints
 The following either haven't been implemented yet or haven't been tested.
 
-### /leaderboard (GET)
+### /<sessionID>/leaderboard (GET)
 Returns an user scores, tracking the number questions they've answered correctly
 and incorrectly.
 
