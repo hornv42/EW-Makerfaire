@@ -87,11 +87,11 @@ app.post('/answer', (req, res) => {
   var stationID = body.stationID;
   var attemptAnswer = body.answer;
 
-  if (userID == undefined
-      || stationID == undefined
-      || attemptAnswer == undefined) {
+  if (!Number.isInteger(userID)
+      || !Number.isInteger(stationID)
+      || !Number.isInteger(attemptAnswer)) {
     res.status(400);
-    res.send("Missing parameters");
+    res.send("Bad parameters");
   }
   else {
     db.get('SELECT answer FROM stations WHERE stationID = ?', [stationID], (err, row) => {
