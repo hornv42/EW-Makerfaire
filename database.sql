@@ -1,21 +1,24 @@
 BEGIN TRANSACTION;
+CREATE TABLE IF NOT EXISTS "stations" (
+	"stationID"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+	"name"	TEXT,
+	"question"	TEXT,
+	"answer"	TEXT,
+	"x_val"	REAL,
+	"y_val"	REAL
+);
 CREATE TABLE IF NOT EXISTS "results" (
-  "resultID"	INTEGER PRIMARY KEY AUTOINCREMENT,
-  "userID"	INTEGER,
-  "stationID"	INTEGER,
-  "userAnswer"	INTEGER,
-  "timestamp"	INTEGER
+	"sessionID"	INTEGER,
+	"userID"	INTEGER,
+	"stationID"	INTEGER,
+	"userAnswer"	TEXT,
+	"timestamp"	INTEGER,
+	"numAttempts"	INTEGER,
+	PRIMARY KEY("sessionID","userID","stationID"),
+	FOREIGN KEY("userID") REFERENCES "users"("userID")
 );
 CREATE TABLE IF NOT EXISTS "users" (
-  "userID"	INTEGER PRIMARY KEY AUTOINCREMENT,
-  "nickName"	TEXT
-);
-CREATE TABLE IF NOT EXISTS "stations" (
-  "stationID"	INTEGER PRIMARY KEY AUTOINCREMENT,
-  "name"	TEXT,
-  "question"	TEXT,
-  "answer"	INTEGER,
-  "x_val"	REAL,
-  "y_val"	REAL
+	"userID"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+	"nickName"	TEXT
 );
 COMMIT;
