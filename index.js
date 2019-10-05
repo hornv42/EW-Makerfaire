@@ -10,6 +10,7 @@ const maxNumAttempts = 3;
 
 var sessionID = undefined;
 
+// Get sessionID
 app.get('/session', (req, res) => {
   if (sessionID == undefined) {
     res.status(500);
@@ -21,6 +22,7 @@ app.get('/session', (req, res) => {
   }
 });
 
+// Post sets sessionID
 app.post('/session', (req, res) => {
   var newSession = req.body.sessionID;
 
@@ -162,6 +164,91 @@ app.post('/answer', (req, res) => {
       }
     });
   }
+});
+
+//For the Leaderboard: Gets the session's user scores, tracking the number questions they've answered correctly and incorrectly.
+app.get('/leaderboard/:sessionID', (req, res) => {
+  var sessionID = req.params.sessionID;
+  console.log(sessionID);
+  var query = `SELECT users.userID, users.nickName, results.userAnswer, stations.answer AS correctAnswer
+                  FROM users
+                  JOIN results ON users.userID=results.userID
+                    JOIN stations ON results.stationID=stations.stationID
+                    WHERE results.sessionID = ?
+                    ORDER BY users.userID;`;
+
+  console.log(db);
+  db.all(query, [sessionID], (err, rows) => {
+    if (err) {
+      res.status(500);
+      res.send(err);
+    }
+    else if (rows.length == 0) {
+      res.send([]);
+    }
+    else {
+      console.log(rows);
+      var leadResults = [];
+      var userID = null;
+      var nickName = null;
+      var numCorrect = null;
+      var numWrong = null;
+      rows.forEach((row) => {
+        if (userID != row.userID) {
+          if (userID != null) {
+            var userInfo = {
+              "userID": userID,
+              "nickName": nickName,
+              "numCorrect": numCorrect,
+              "numIncorrect": numWrong
+            }
+            leadResults.push(userInfo);
+          }
+          userID = row.userID;
+          nickName = row.nickName;
+          numCorrect = 0;
+          numWrong = 0;
+        }
+        if (row.userAnswer == row.correctAnwser) {
+          numCorrect++;
+        }
+        else {
+          numWrong++;
+        }
+      });
+      var userInfo = {
+        "userID": userID,
+        "nickName": nickName,
+        "numCorrect": numCorrect,
+        "numIncorrect": numWrong
+      }
+      leadResults.push(userInfo);
+      res.send(leadResults);
+    }
+  });
+});
+
+// Get a user's detailed status, including the answers they've given at each of the stations, as well as information about the station
+app.get('/userDetail/:sessionID/:userID', (req, res) => {
+  var sessionID = req.params.sessionID;
+  var userID = req.params.userID;
+  var query = `SELECT results.sessionID, users.userID, users.nickName, results.userAnswer, stations.stationID, 
+                     stations.x_val, stations.y_val, results.timestamp, stations.answer
+                FROM users
+                JOIN results ON users.userID=results.userID
+                  JOIN stations ON results.stationID=stations.stationID 
+                  WHERE results.sessionID = ? AND users.userID = ?
+                  ORDER BY timestamp;`;
+                           
+  db.get(query, [sessionID, userID], (err, row) => {
+    if (err) {
+      res.status(500);
+      res.send(err);
+    }
+    else {
+      res.send(row);
+    }
+  });
 });
 
 app.listen(port);
