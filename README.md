@@ -127,7 +127,7 @@ true
 ## WIP Endpoints
 The following either haven't been implemented yet or haven't been tested.
 
-### /\<sessionID\>/leaderboard (GET)
+### /leaderboard/\<sessionID\> (GET)
 Returns an user scores, tracking the number questions they've answered correctly
 and incorrectly.
 
