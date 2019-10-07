@@ -178,15 +178,13 @@ app.post('/answer', (req, res) => {
 //For the Leaderboard: Gets the session's user scores, tracking the number questions they've answered correctly and incorrectly.
 app.get('/leaderboard/:sessionID', (req, res) => {
   var sessionID = req.params.sessionID;
-  console.log(sessionID);
+
   var query = `SELECT users.userID, users.nickName, results.userAnswer, stations.answer AS correctAnswer
                   FROM users
                   JOIN results ON users.userID=results.userID
                     JOIN stations ON results.stationID=stations.stationID
                     WHERE results.sessionID = ?
                     ORDER BY users.userID;`;
-
-  console.log(db);
   db.all(query, [sessionID], (err, rows) => {
     if (err) {
       res.status(500);
@@ -196,7 +194,6 @@ app.get('/leaderboard/:sessionID', (req, res) => {
       res.send([]);
     }
     else {
-      console.log(rows);
       var leadResults = [];
       var userID = null;
       var nickName = null;
@@ -210,7 +207,8 @@ app.get('/leaderboard/:sessionID', (req, res) => {
               "nickName": nickName,
               "numCorrect": numCorrect,
               "numIncorrect": numWrong
-            }
+            };
+
             leadResults.push(userInfo);
           }
           userID = row.userID;
@@ -225,12 +223,14 @@ app.get('/leaderboard/:sessionID', (req, res) => {
           numWrong++;
         }
       });
+
       var userInfo = {
         "userID": userID,
         "nickName": nickName,
         "numCorrect": numCorrect,
         "numIncorrect": numWrong
-      }
+      };
+
       leadResults.push(userInfo);
       res.send(leadResults);
     }
