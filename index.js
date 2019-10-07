@@ -58,11 +58,13 @@ app.get('/users/:userID', (req, res) => {
 
   db.get('SELECT * FROM users where userID = ?', [userID], (err, row) => {
     if (err) {
-      res.status(404);
-      res.end();
+      res.status(500).send(err);
+    }
+    else if (row === undefined) {
+      res.status(404).end();
     }
     else {
-      res.send(row);
+      res.status(200).send(row);
     }
   });
 });
