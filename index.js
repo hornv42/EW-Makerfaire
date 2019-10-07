@@ -116,53 +116,62 @@ app.post('/answer', (req, res) => {
   var stationID = body.stationID;
   var attemptAnswer = body.answer;
 
-  if (!Number.isInteger(userID)
-      || !Number.isInteger(stationID)
-      || !Number.isInteger(attemptAnswer)) {
+  if (sessionID == undefined) {
+    res.status(500);
+    res.send("No session active");
+  }
+  else if (!Number.isInteger(userID)
+           || !Number.isInteger(stationID)
+           || !Number.isInteger(attemptAnswer)) {
     res.status(400);
     res.send("Bad parameters");
   }
   else {
-    db.get('SELECT answer FROM stations WHERE stationID = ?', [stationID], (err, row) => {
-      if (err) {
-        res.status(500);
-        res.send(err);
-      }
-      else if (row == undefined) {
-        res.status(404);
-        res.send("No such station '" + stationID.toString() + "'");
-      }
-      else {
-        var realAnswer = row.answer;
-
-        db.get('SELECT COUNT(*) as count FROM results WHERE userID = ? AND stationID = ?', [userID, stationID], (err, count) => {
-          if (err) {
-            res.status(500);
-            res.send("Error querying user");
-          }
-          else if (count.count >= maxNumAttempts) {
-            res.status(400);
-            res.send("Too many attempts");
-          }
-          else {
-            db.run('INSERT INTO results (userID, stationID, userAnswer, timestamp) VALUES(?, ?, ?, ?)',
-                   [userID, stationID, attemptAnswer, timestamp],
-                   (err) =>
-                   {
-                     if (err) {
-                       res.status(500);
-                       console.log(err);
-                       res.send(err);
-                     }
-                     else {
-                       res.status(200);
-                       res.send(attemptAnswer == realAnswer);
-                     }
-                   });
-          }
-        });
-      }
-    });
+    db.run(`INSERT INTO results
+            (sessionID, userID, stationID, userAnswer, timestamp, numAttempts)
+            VALUES($sessionID, $userID, $stationID, $userAnswer, $timestamp, 1)
+            ON CONFLICT(sessionID, userID, stationID)
+            DO UPDATE SET
+            userAnswer = $userAnswer,
+            timestamp = $timestamp,
+            numAttempts = numAttempts + 1
+            WHERE numAttempts < $maxNumAttempts
+            AND NOT EXISTS (SELECT * FROM stations  WHERE stationID = results.stationID AND answer = userAnswer)`,
+           {
+             $sessionID: sessionID,
+             $userID: userID,
+             $stationID: stationID,
+             $userAnswer: attemptAnswer,
+             $timestamp: timestamp,
+             $maxNumAttempts: maxNumAttempts
+           },
+           (err, row) =>
+           {
+             if (err) {
+               res.status(500);
+               res.send(err);
+             }
+             else {
+               // Check if the latest answer is correct
+               db.get(`SELECT stations.answer = results.userAnswer as correct
+                       FROM stations
+                       JOIN results ON stations.stationID = results.stationID
+                       WHERE results.sessionID = ?
+                       AND results.userID = ?
+                       AND results.stationID = ?`,
+                      [sessionID, userID, stationID],
+                      (err, row) => {
+                        if (err || row === undefined) {
+                          res.status(500);
+                          res.send(err);
+                        }
+                        else {
+                          res.status(200);
+                          res.send(row.correct == 1);
+                        }
+                      });
+             }
+           });
   }
 });
 
