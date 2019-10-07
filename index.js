@@ -13,12 +13,10 @@ var sessionID = undefined;
 // Get sessionID
 app.get('/session', (req, res) => {
   if (sessionID == undefined) {
-    res.status(500);
-    res.send("No session active.");
+    res.status(500).send("No session active.");
   }
   else {
-    res.status(200);
-    res.send({ sessionID: sessionID });
+    res.status(200).send({ sessionID: sessionID });
   }
 });
 
@@ -27,13 +25,11 @@ app.post('/session', (req, res) => {
   var newSession = req.body.sessionID;
 
   if (!Number.isInteger(newSession)) {
-    res.status(400);
-    res.send("Invalid session ID: '" + String(sessionID) + "'");
+    res.status(400).send("Invalid session ID: '" + String(sessionID) + "'");
   }
   else {
     sessionID = newSession;
-    res.status(200);
-    res.end();
+    res.status(200).end();
   }
 });
 
@@ -75,18 +71,15 @@ app.post('/users/:userID', (req, res) => {
   var nickName = req.body.nickName;
 
   if (nickName == undefined) {
-    res.status(400);
-    res.send("Missing parameters");
+    res.status(400).send("Missing parameters");
   }
   else {
     db.run('INSERT OR REPLACE INTO users (userID, nickName) VALUES(?, ?)', [userID, nickName], (err) => {
       if (err) {
-        res.status(500);
-        res.send(err.toString());
+        res.status(500).send(err);
       }
       else {
-        res.status(200);
-        res.end();
+        res.status(200).end();
       }
     });
   }
@@ -98,11 +91,10 @@ app.get('/results/:userID', (req, res) => {
 
   db.all('SELECT * FROM results WHERE userID = ?', [userID], (err, rows) => {
     if (err) {
-      res.status(404);
-      res.end();
+      res.status(500).send(err);
     }
     else {
-      res.send(rows);
+      res.status(200).send(rows);
     }
   });
 });
@@ -113,7 +105,12 @@ app.get('/results/:userID/:stationID', (req, res) => {
   var stationID = req.params.stationID;
 
   db.all('SELECT * FROM results WHERE userID = ? AND stationID = ?', [userID, stationID], (err, rows) => {
-    res.send(rows);
+    if (err) {
+      res.status(500).send(err);
+    }
+    else {
+      res.status(200).send(rows);
+    }
   });
 });
 
@@ -133,8 +130,7 @@ app.post('/answer', (req, res) => {
   else if (!Number.isInteger(userID)
            || !Number.isInteger(stationID)
            || !Number.isInteger(attemptAnswer)) {
-    res.status(400);
-    res.send("Bad parameters");
+    res.status(400).send("Bad parameters");
   }
   else {
     db.run(`INSERT INTO results
@@ -155,11 +151,10 @@ app.post('/answer', (req, res) => {
              $timestamp: timestamp,
              $maxNumAttempts: maxNumAttempts
            },
-           (err, row) =>
+           (err) =>
            {
              if (err) {
-               res.status(500);
-               res.send(err);
+               res.status(500).send(err);
              }
              else {
                // Check if the latest answer is correct
@@ -171,13 +166,14 @@ app.post('/answer', (req, res) => {
                        AND results.stationID = ?`,
                       [sessionID, userID, stationID],
                       (err, row) => {
-                        if (err || row === undefined) {
-                          res.status(500);
-                          res.send(err);
+                        if (err) {
+                          res.status(500).send(err);
+                        }
+                        else if (row === undefined) {
+                          res.status(500).end();
                         }
                         else {
-                          res.status(200);
-                          res.send(row.correct == 1);
+                          res.status(200).send(row.correct == 1);
                         }
                       });
              }
