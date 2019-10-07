@@ -40,7 +40,15 @@ app.post('/session', (req, res) => {
 // Get list of user IDs
 app.get('/users', (req, res) => {
   db.all('SELECT userID FROM users', [], (err, rows) => {
-    res.send(rows.map(r => r.userID));
+    if (err) {
+      res.status(500).send(err);
+    }
+    else if (rows.length == 0) {
+      res.status(200).send([]);
+    }
+    else {
+      res.send(rows.map(r => r.userID));
+    }
   });
 });
 
