@@ -39,11 +39,8 @@ app.get('/users', (req, res) => {
     if (err) {
       res.status(500).send(err);
     }
-    else if (rows.length == 0) {
-      res.status(200).send([]);
-    }
     else {
-      res.send(rows.map(r => r.userID));
+      res.status(200).send(rows.map(r => r.userID));
     }
   });
 });
@@ -193,11 +190,10 @@ app.get('/leaderboard/:sessionID', (req, res) => {
                     ORDER BY users.userID;`;
   db.all(query, [sessionID], (err, rows) => {
     if (err) {
-      res.status(500);
-      res.send(err);
+      res.status(500).send(err);
     }
     else if (rows.length == 0) {
-      res.send([]);
+      res.status(200).send([]);
     }
     else {
       var leadResults = [];
@@ -238,7 +234,7 @@ app.get('/leaderboard/:sessionID', (req, res) => {
       };
 
       leadResults.push(userInfo);
-      res.send(leadResults);
+      res.status(200).send(leadResults);
     }
   });
 });
@@ -258,14 +254,12 @@ app.get('/userDetail/:sessionID/:userID', (req, res) => {
 
   db.all(query, [sessionID, userID], (err, rows) => {
     if (err) {
-      res.status(500);
-      res.send(err);
+      res.status(500).send(err);
     }
     else if (rows.length == 0) {
-      res.send([]);
+      res.status(404).send("No results for user '" + String(userID) + "'");
     }
     else {
-      console.log(rows);
       var answersArray = [];
 
       rows.forEach((row) => {
@@ -283,7 +277,7 @@ app.get('/userDetail/:sessionID/:userID', (req, res) => {
         "nickName": rows[0].nickName,
         "answers" : answersArray
       }
-      res.send(userDetail);
+      res.status(200).send(userDetail);
     }
   });
 });
