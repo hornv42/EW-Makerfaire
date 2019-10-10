@@ -243,27 +243,50 @@ app.get('/leaderboard/:sessionID', (req, res) => {
   });
 });
 
-// Get a user's detailed status, including the answers they've given at each of the stations, as well as information about the station
+// userDetail: Get a user's detailed status, including the answers they've given at each of the stations, 
+  // as well as information about the station.
 app.get('/userDetail/:sessionID/:userID', (req, res) => {
-  var sessionID = req.params.sessionID;
-  var userID = req.params.userID;
-  var query = `SELECT results.sessionID, users.userID, users.nickName, results.userAnswer, stations.stationID, 
+    var sessionID = req.params.sessionID;
+    var userID = req.params.userID;
+    var query = `SELECT results.sessionID, users.userID, users.nickName, results.userAnswer, stations.stationID, 
                      stations.x_val, stations.y_val, results.timestamp, stations.answer
                 FROM users
                 JOIN results ON users.userID=results.userID
                   JOIN stations ON results.stationID=stations.stationID 
                   WHERE results.sessionID = ? AND users.userID = ?
                   ORDER BY timestamp;`;
-                           
-  db.get(query, [sessionID, userID], (err, row) => {
-    if (err) {
-      res.status(500);
-      res.send(err);
-    }
-    else {
-      res.send(row);
-    }
-  });
+
+    db.all(query, [sessionID, userID], (err, rows) => {
+        if (err) {
+            res.status(500);
+            res.send(err);
+        }
+        else if (rows.length == 0) {
+            res.send([]);
+        }
+        else {
+            console.log(rows);
+            var answersArray = [];
+    
+            rows.forEach((row) => {
+                var answer = {
+                    "stationID": row.stationID,
+                    "x_val": row.x_val,
+                    "y_val": row.y_val,
+                    "timestamp": row.timestamp,
+                    "correct" : row.answer ===row.userAnswer
+                }  
+                answersArray.push(answer);          
+            });
+            var userDetail = {
+                "userID": rows[0].userID,
+                "nickName": rows[0].nickName,
+                "answers" : answersArray
+            }   
+            res.send(userDetail);
+        }
+    });
+  
 });
 
 app.listen(port);
