@@ -125,8 +125,8 @@ app.post('/answer', (req, res) => {
     res.send("No session active");
   }
   else if (!Number.isInteger(userID)
-           || !Number.isInteger(stationID)
-           || !Number.isInteger(attemptAnswer)) {
+    || !Number.isInteger(stationID)
+    || !Number.isInteger(attemptAnswer)) {
     res.status(400).send("Bad parameters");
   }
   else {
@@ -140,45 +140,44 @@ app.post('/answer', (req, res) => {
             numAttempts = numAttempts + 1
             WHERE numAttempts < $maxNumAttempts
             AND NOT EXISTS (SELECT * FROM stations  WHERE stationID = results.stationID AND answer = userAnswer)`,
-           {
-             $sessionID: sessionID,
-             $userID: userID,
-             $stationID: stationID,
-             $userAnswer: attemptAnswer,
-             $timestamp: timestamp,
-             $maxNumAttempts: maxNumAttempts
-           },
-           (err) =>
-           {
-             if (err) {
-               res.status(500).send(err);
-             }
-             else {
-               // Check if the latest answer is correct
-               db.get(`SELECT stations.answer = results.userAnswer as correct
+      {
+        $sessionID: sessionID,
+        $userID: userID,
+        $stationID: stationID,
+        $userAnswer: attemptAnswer,
+        $timestamp: timestamp,
+        $maxNumAttempts: maxNumAttempts
+      },
+      (err) => {
+        if (err) {
+          res.status(500).send(err);
+        }
+        else {
+          // Check if the latest answer is correct
+          db.get(`SELECT stations.answer = results.userAnswer as correct
                        FROM stations
                        JOIN results ON stations.stationID = results.stationID
                        WHERE results.sessionID = ?
                        AND results.userID = ?
                        AND results.stationID = ?`,
-                      [sessionID, userID, stationID],
-                      (err, row) => {
-                        if (err) {
-                          res.status(500).send(err);
-                        }
-                        else if (row === undefined) {
-                          res.status(500).end();
-                        }
-                        else {
-                          res.status(200).send(row.correct == 1);
-                        }
-                      });
-             }
-           });
+            [sessionID, userID, stationID],
+            (err, row) => {
+              if (err) {
+                res.status(500).send(err);
+              }
+              else if (row === undefined) {
+                res.status(500).end();
+              }
+              else {
+                res.status(200).send(row.correct == 1);
+              }
+            });
+        }
+      });
   }
 });
 
-//For the Leaderboard: Gets the session's user scores, tracking the number questions they've answered correctly and incorrectly.
+//For the leaderboard: Gets the session's user scores, tracking the number questions they've answered correctly and incorrectly.
 app.get('/leaderboard/:sessionID', (req, res) => {
   var sessionID = req.params.sessionID;
 
