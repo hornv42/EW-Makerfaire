@@ -182,12 +182,13 @@ app.post('/answer', (req, res) => {
 app.get('/leaderboard/:sessionID', (req, res) => {
   var sessionID = req.params.sessionID;
 
-  var query = `SELECT users.userID, users.nickName, results.userAnswer, stations.answer AS correctAnswer
+  var query = `SELECT users.userID, users.nickName, stations.answer = results.userAnswer as correct 
                   FROM users
                   JOIN results ON users.userID=results.userID
                     JOIN stations ON results.stationID=stations.stationID
                     WHERE results.sessionID = ?
                     ORDER BY users.userID;`;
+
   db.all(query, [sessionID], (err, rows) => {
     if (err) {
       res.status(500).send(err);
@@ -218,7 +219,7 @@ app.get('/leaderboard/:sessionID', (req, res) => {
           numCorrect = 0;
           numWrong = 0;
         }
-        if (row.userAnswer == row.correctAnwser) {
+        if (row.correct == 1) {
           numCorrect++;
         }
         else {
@@ -244,15 +245,14 @@ app.get('/leaderboard/:sessionID', (req, res) => {
 app.get('/userDetail/:sessionID/:userID', (req, res) => {
   var sessionID = req.params.sessionID;
   var userID = req.params.userID;
-  var query = `SELECT results.sessionID, users.userID, users.nickName, results.userAnswer, stations.stationID,
-                     stations.x_val, stations.y_val, results.timestamp, stations.answer
-                FROM users
-                JOIN results ON users.userID=results.userID
-                  JOIN stations ON results.stationID=stations.stationID
-                  WHERE results.sessionID = ? AND users.userID = ?
-                  ORDER BY timestamp;`;
 
-  db.all(query, [sessionID, userID], (err, rows) => {
+  var query = `SELECT stationID, nickName, x_val, y_val, answer = userAnswer as correct, timestamp
+                FROM stations
+                LEFT JOIN (SELECT stationID as rStationID, userAnswer, timestamp FROM results WHERE sessionID = ? AND userID = ?) ON rStationID = stations.stationID
+                JOIN (select nickName FROM users WHERE userID = ?)
+                ORDER BY timestamp;`
+
+  db.all(query, [sessionID, userID, userID], (err, rows) => {
     if (err) {
       res.status(500).send(err);
     }
@@ -260,24 +260,34 @@ app.get('/userDetail/:sessionID/:userID', (req, res) => {
       res.status(404).send("No results for user '" + String(userID) + "'");
     }
     else {
-      var answersArray = [];
+      var convertRow = row => {
+        var answer;
 
-      rows.forEach((row) => {
-        var answer = {
+        if (row.timestamp == null) {
+          answer = null;
+        }
+        else {
+          answer = {
+            "correct": row.correct == 1,
+            "timestamp": row.timestamp
+          };
+        }
+
+        return {
           "stationID": row.stationID,
           "x_val": row.x_val,
           "y_val": row.y_val,
-          "timestamp": row.timestamp,
-          "correct" : row.answer ===row.userAnswer
-        }
-        answersArray.push(answer);
-      });
-      var userDetail = {
-        "userID": rows[0].userID,
-        "nickName": rows[0].nickName,
-        "answers" : answersArray
+          "answer": answer
+        };
       }
-      res.status(200).send(userDetail);
+      var stations = rows.map(convertRow);
+      var userInfo = {
+        "userID": userID,
+        "nickName": rows[0].nickName,
+        "stations": stations
+      }
+
+      res.send(userInfo);
     }
   });
 });
