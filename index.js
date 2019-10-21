@@ -314,8 +314,7 @@ app.get('/createStation', (req, res) => {
   else {
     db.run(`INSERT OR REPLACE INTO stations (stationID, name, question, answer, x_val, y_val)
             VALUES(?, ?, ?, ?, ?, ?)`,
-           [stationID, name, question, answer, x_val, y_val], function (err, row) {
-             console.log(this);
+           [stationID, name, question, answer, x_val, y_val], (err, row) => {
              if (err) {
                res.status(500).send(err);
              }
@@ -418,7 +417,6 @@ app.get('/config', (req,res) => {
   res.status(200).send("Scavenger: OK");
 });
 
-
 app.get('/validate', (req,res) => {
   var time = req.query.time;
   var nodeID = req.query.nodeID;
@@ -477,6 +475,5 @@ app.get('/validate', (req,res) => {
 
   res.status(200).send("Scavenger: OK");
 });
-
 
 app.listen(port);
