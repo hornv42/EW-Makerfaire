@@ -293,4 +293,35 @@ app.get('/userDetail/:sessionID/:userID', (req, res) => {
   });
 });
 
+// Create or update station information
+app.get('/createStation', (req, res) => {
+  var stationID = req.query.stationID;
+  var name = req.query.name;
+  var question = req.query.question;
+  var answer = req.query.answer;
+  var x_val = req.query.x_val;
+  var y_val = req.query.y_val;
+
+  if (stationID == undefined
+      || name == undefined
+      || question == undefined
+      || answer == undefined
+      || x_val == undefined
+      || y_val == undefined) {
+    res.status(400).send("Missing parameters");
+  }
+  else {
+    db.run(`INSERT OR REPLACE INTO stations (stationID, name, question, answer, x_val, y_val)
+            VALUES(?, ?, ?, ?, ?, ?)`,
+           [stationID, name, question, answer, x_val, y_val], function (err, row) {
+             console.log(this);
+             if (err) {
+               res.status(500).send(err);
+             }
+             else {
+               res.status(200).send("Station created");
+             }
+           });
+  }
+});
 app.listen(port);
