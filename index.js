@@ -3,6 +3,7 @@ const sqlite3 = require('sqlite3');
 
 const app = express();
 app.use(express.json());
+app.use('/static', express.static('static'));
 
 const db = new sqlite3.Database('./database.db');
 const port = 3000;
