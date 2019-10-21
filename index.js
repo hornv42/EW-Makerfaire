@@ -63,11 +63,12 @@ app.get('/users/:userID', (req, res) => {
 });
 
 // Create or update user information for userID
-app.post('/users/:userID', (req, res) => {
-  var userID = req.params.userID;
-  var nickName = req.body.nickName;
+app.get('/createUser', (req, res) => {
+  var userID = req.query.userID;
+  var nickName = req.query.nickName;
 
-  if (nickName == undefined) {
+  if (userID == undefined
+      || nickName == undefined) {
     res.status(400).send("Missing parameters");
   }
   else {
