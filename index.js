@@ -181,7 +181,7 @@ app.post('/answer', (req, res) => {
 app.get('/leaderboard/:sessionID', (req, res) => {
   var sessionID = req.params.sessionID;
 
-  var query = `SELECT users.userID, users.nickName, stations.answer = results.userAnswer as correct 
+  var query = `SELECT users.userID, users.nickName, stations.answer = results.userAnswer as correct
                   FROM users
                   JOIN results ON users.userID=results.userID
                     JOIN stations ON results.stationID=stations.stationID
@@ -249,7 +249,7 @@ app.get('/userDetail/:sessionID/:userID', (req, res) => {
                 FROM stations
                 LEFT JOIN (SELECT stationID as rStationID, userAnswer, timestamp FROM results WHERE sessionID = ? AND userID = ?) ON rStationID = stations.stationID
                 JOIN (select nickName FROM users WHERE userID = ?)
-                ORDER BY timestamp;`
+                ORDER BY timestamp;`;
 
   db.all(query, [sessionID, userID, userID], (err, rows) => {
     if (err) {
@@ -278,13 +278,14 @@ app.get('/userDetail/:sessionID/:userID', (req, res) => {
           "y_val": row.y_val,
           "answer": answer
         };
-      }
+      };
+
       var stations = rows.map(convertRow);
       var userInfo = {
         "userID": userID,
         "nickName": rows[0].nickName,
         "stations": stations
-      }
+      };
 
       res.send(userInfo);
     }

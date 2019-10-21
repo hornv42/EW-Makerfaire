@@ -141,21 +141,27 @@ the stations, as well as information about the station.
 #### Spec
 An object of:
 
-| Name     | Type    | Description              |
-|:---------|:--------|:-------------------------|
-| userID   | integer | The ID of the user       |
-| nickName | string  | The name of the user     |
-| answers  | array   | A list of answer objects |
+| Name     | Type    | Description               |
+|:---------|:--------|:--------------------------|
+| userID   | integer | The ID of the user        |
+| nickName | string  | The name of the user      |
+| stations | array   | A list of station objects |
 
-Each answer object is:
+Each station object is:
 
-| Name      | Type    | Description                                     |
-|:----------|:--------|:------------------------------------------------|
-| stationID | integer | The ID of the station                           |
-| x_val     | integer | The x coordinate of the station                 |
-| y_val     | integer | The y coordinate of the station                 |
-| timestamp | integer | The timestamp of when the answer was given      |
-| correct   | boolean | A boolean indicating if the answer was correct. |
+| Name      | Type    | Description                                                     |
+|:----------|:--------|:----------------------------------------------------------------|
+| stationID | integer | The ID of the station                                           |
+| x_val     | integer | The x coordinate of the station                                 |
+| y_val     | integer | The y coordinate of the station                                 |
+| answer    | object  | An answer object. null if the user has not visited this station |
+
+An answer object is:
+
+| Name      | Type    | Description                                            |
+|:----------|:--------|:-------------------------------------------------------|
+| correct   | boolean | true if the user has correctly answered this station   |
+| timestamp | integer | The timestamp for when the user submitted their answer |
 
 #### Example
 
@@ -163,27 +169,30 @@ Each answer object is:
 {
   "userID": 5,
   "nickName": "Bill",
-  "answers": [
+  "stations": [
     {
       "stationID": 1,
       "x_val": 0,
       "y_val": 5,
-      "timestamp": 10293,
-      "correct": false
+      "answer": null
     },
     {
       "stationID": 2,
       "x_val": 0,
       "y_val": 5,
-      "timestamp": 15293,
-      "correct": true
+      "answer": {
+        "correct": true,
+        "timestamp": 15293
+      }
     },
     {
       "stationID": 5,
-      "x_val": 0,
-      "y_val": 5,
-      "timestamp": 19393,
-      "correct": true
+      "x_val": 10,
+      "y_val": 50,
+      "answer": {
+        "correct": false,
+        "timestamp": 17293
+      }
     }
   ]
 }
