@@ -325,4 +325,158 @@ app.get('/createStation', (req, res) => {
            });
   }
 });
+
+const ErrorNodeID = 1;               //Bad Node ID
+const ErrorQueryID = 2;              //Bad Query ID
+const ErrorUserID = 3;               //Non-registered User
+const ErrorQueryValue = 4;           //Invalid Value
+const ErrorUserRepeat = 5;           //User has already entered a value
+const ErrorUndefinedData = 6;        //If any of the data is UNDEFINED - send this error
+const ErrorUserLockout = 7;
+
+app.get('/server-check', (req,res) => {
+  var nodeID = req.query.nodeID;
+  var time = req.query.time;
+  console.log("ServerCheck ID: " + nodeID);
+  //Just Acknowledge command received  - The NODE is just checking server is on-line
+  //  before making other requests.
+  //  ALWAYS just send a OK response
+  //  Not working if NODE is valid yet
+  res.status(200).send("Scavenger: OK");
+});
+
+//http://127.0.0.1:3000/heartbeat?node=20&time=1000        //WORKS - YEA
+app.get('/heartbeat', (req, res) => {
+  var time = req.query.time;
+  var nodeID = req.query.nodeID; //either a value or undefined
+
+  console.log("Heartbeat - nodeID: "+ nodeID +" -- time: "+ time);
+
+  //1) Node is Letting Server know it is alive
+  //      Server needs to keep track of all nodes and send ALERT if a Node does not ping periodically
+  //2) Server needs to validate that a NODE-ID has been loaded (i.e. ran CONFIG)
+  //      If not configed - then error code is sent in response
+  //3) Check for Undefined Vars and send Error if critical data missing (400 Code)
+
+  //TEST CODE - CHECK FOR ID OVER 90 to create error condition
+  if (!nodeID) {
+    console.log("HeartBeat: Test Code - nodeID = 0 (undefined)");
+    res.status(400).send("Scavenger: ERROR" + ErrorUndefinedData);
+    return;
+  }
+
+  if (nodeID>=90) {
+    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+    console.log("HeartBeat: Test Code - nodeID>=90");
+    res.status(200).send("Scavenger: ERROR" + ErrorNodeID);
+    return;
+  }
+
+  res.status(200).send("Scavenger: OK");
+});
+
+app.get('/config', (req,res) => {
+  var time = req.query.time;
+  var nodeID = req.query.nodeID;
+  var queryID = req.query.queryID;
+  var mac = req.query.MAC;
+
+  console.log("config - nodeID: "+ nodeID + "- queryID: "+ queryID + " - mac: "+ mac);
+
+  //This is the NODE registering itself with the Server
+  //Server has the following checks it needs to perform
+  // 1) Is the NODEID valid (i.e. within range) - this should be handled by the node itself - but good to check
+  // 2) Confirm the node does not already exist.  This requires the MAC address to be checked too since
+  //      the node may have re-booted - so the server must allow for the same node re-registering
+  // 3) Check the queryID is valid (i.e. within range - again Node did this) - but is this the
+  //      query for this NODE (not certain how we do this - unless we just let the Node define it)
+  //      May check that the same "Query-List ID is not being used"
+  // 4) Record with Time Stamp (either internal or NODEs)
+  // 5) Check for Undefined Vars and send Error if critical data missing (400 Code)
+  // 6) NOTE:  To avoid a ZERO (0) queryID from being considered UNDEFINED - do a direct check
+
+  //TEST CODE
+  if (!nodeID || !queryID || !mac) {
+    console.log("Config - UNDEFINED Vars");
+    res.status(400).send("Scavenger: ERROR" + ErrorUndefinedData);
+    return;
+  }
+
+  if (nodeID>=50)
+  {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+    console.log("Config - Test Code - nodeID>=50");
+    res.status(200).send("Scavenger: ERROR" + ErrorNodeID);
+    return;
+  }
+  if (queryID >= 20 && queryID < 40)
+  {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+    console.log("Config - Test Code - 20 <= queryID < 40");
+    res.status(200).send("Scavenger: ERROR" + ErrorQueryID);
+    return;
+  }
+
+  res.status(200).send("Scavenger: OK");
+});
+
+
+app.get('/validate', (req,res) => {
+  var time = req.query.time;
+  var nodeID = req.query.nodeID;
+  var queryID = req.query.queryID;
+  var queryValue = req.query.queryValue;
+  var userID = req.query.userID;
+
+  console.log("validate - nodeID: "+ req.params.nodeID);
+
+  //This is the userID and queryValue check
+  // 1) All parameters are required (except time) - error if any UNDEFINED (400 Code)
+  // 2) Verify that NodeID and QueryID match Configed values (just safety)
+  // 3) Verify that UserID is valid/Registered - if not ERROR-UserID
+  // 4) Verify that UserID has not entered data in the past
+  //      If already Entered & Correct - just consider they forgot - and send ERROR-REPEAT
+  //      If they have entered BAD data each time - after 3 attempts they are Locked out of this NODE
+  // 5) Query Value check - the Query ID creates several possiblities -
+  //      If QueryID = 0 -- Value is ignored and is considered Valid - send OK response
+  //      if QueryID = 50.59 -- Value is to match last digit (i.e. ID=52-Val=2, ID=57-Val=7)
+  //      If QueryID = 1..49 - These are from the Question List - those answers are somewhere else
+  //      An error here results in the ERROR-BadQueryValue being returned
+  //      If Valid - UserID is recorded for this Node
+
+  //TEST CODE - this is to test NODE ERROR PATHS - not the server logic
+  if (!nodeID || !queryID || !userID || !queryValue)
+  {
+    console.log("Validate: Test Code - UNDEFINED DATA");
+    res.status(400).send("Scavenger: ERROR" + ErrorUndefinedData);
+    return ;
+  }
+  if (userID>=0x5000)
+  {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+    console.log("Validate: Test Code - userID >= 0x5000");
+    res.status(200).send("Scavenger: ERROR" + ErrorUserID);
+    return;
+  }
+  if (userID>=0x6000)
+  {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+    console.log("Validate: Test Code - userID >= 0x6000");
+    res.status(200).send("Scavenger: ERROR" + ErrorUserRepeat);
+    return;
+  }
+  if (userID>=0x7000)
+  {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+    console.log("Validate: Test Code - userID >= 0x7000");
+    res.status(200).send("Scavenger: ERROR" + ErrorUserLockout);
+    return;
+  }
+
+  if (queryValue >= 5)
+  {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+    console.log("Validate: Test Code - queryValue >= 5");
+    res.status(200).send("Scavenger: ERROR" + ErrorQueryValue);
+    return;
+  }
+
+  res.status(200).send("Scavenger: OK");
+});
+
+
 app.listen(port);
