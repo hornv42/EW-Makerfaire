@@ -320,6 +320,32 @@ app.get('/userDetail/:sessionID/:userID', (req, res) => {
   });
 });
 
+app.get('/stations', (req, res) => {
+  db.all(`SELECT stationID FROM stations`, (err, rows) => {
+    if (err) {
+      res.status(500).send(err);
+    }
+    else {
+      res.status(200).send(rows.map(r => r.stationID));
+    }
+  });
+});
+
+app.get('/stations/:stationID', (req, res) => {
+  var stationID = req.params.stationID;
+  db.get(`SELECT * FROM stations WHERE stationID = ?`, [stationID], (err, row) => {
+    if (err) {
+      res.status(500).send(err);
+    }
+    else if (row == undefined) {
+      res.status(400).send("Station '" + stationID + "' does not exist");
+    }
+    else {
+      res.status(200).send(row);
+    }
+  });
+});
+
 // Create or update station information
 app.get('/createStation', (req, res) => {
   var stationID = req.query.stationID;
