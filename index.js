@@ -139,6 +139,31 @@ app.get('/results/:userID/:stationID', (req, res) => {
   });
 });
 
+app.get('/deleteResult/:sessionID/:userID/:stationID', (req, res) => {
+  var sessionID = req.params.sessionID;
+  var userID = req.params.userID;
+  var stationID = req.params.stationID;
+  if (sessionID == undefined) {
+    res.status(500).send("No session active");
+  }
+  else {
+    db.run(`DELETE FROM results
+            WHERE sessionID = ?
+            AND userID = ?
+            AND stationID = ?`, [sessionID, userID, stationID], function (err) {
+              if (err) {
+                res.status(500).send(err);
+              }
+              else if (this.changes == 0) {
+                res.status(400).send("No such user/station combination '" + userID + "/" + stationID + "'");
+              }
+              else {
+                res.status(200).send("Result cleared");
+              }
+            });
+  }
+});
+
 app.post('/answer', (req, res) => {
   var timestamp = Date.now();
 
