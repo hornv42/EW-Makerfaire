@@ -314,7 +314,7 @@ app.get('/createStation', (req, res) => {
   else {
     db.run(`INSERT OR IGNORE INTO stations (stationID, name, question, answer, x_val, y_val)
             VALUES(?, ?, ?, ?, ?, ?)`,
-           [stationID, name, question, answer, x_val, y_val], function (err, row) {
+           [stationID, name, question, answer, x_val, y_val], function (err) {
              if (err) {
                res.status(500).send(err);
              }
@@ -353,7 +353,7 @@ app.get('/updateStation', (req, res) => {
               x_val = coalesce(x_val, ?),
               y_val = coalesce(y_val, ?)
            WHERE stationID = ?`,
-           [name, question, answer, x_val, y_val, stationID], function (err, row) {
+           [name, question, answer, x_val, y_val, stationID], function (err) {
              if (err) {
                res.status(500).send(err);
              }
