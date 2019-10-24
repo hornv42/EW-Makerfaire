@@ -325,6 +325,45 @@ app.get('/createStation', (req, res) => {
   }
 });
 
+app.get('/updateStation', (req, res) => {
+  var stationID = req.query.stationID;
+  var name = req.query.name;
+  var question = req.query.question;
+  var answer = req.query.answer;
+  var x_val = req.query.x_val;
+  var y_val = req.query.y_val;
+
+  if (stationID == undefined
+      || (name == undefined
+          && question == undefined
+          && answer == undefined
+          && x_val == undefined
+          && y_val == undefined)) {
+    res.status(400).send("Missing parameters");
+  }
+  else {
+    db.run(`UPDATE stations
+            SET
+              name = coalesce(name, ?),
+              question = coalesce(question, ?),
+              answer = coalesce(answer, ?),
+              x_val = coalesce(x_val, ?),
+              y_val = coalesce(y_val, ?)
+           WHERE stationID = ?`,
+           [name, question, answer, x_val, y_val, stationID], function (err, row) {
+             if (err) {
+               res.status(500).send(err);
+             }
+             else if (this.changes == 0) {
+               res.status(404).send("Station '" + stationID + "' does not exist");
+             }
+             else {
+               res.status(200).send("Station updated");
+             }
+           });
+  }
+});
+
 const ErrorNodeID = 1;               //Bad Node ID
 const ErrorQueryID = 2;              //Bad Query ID
 const ErrorUserID = 3;               //Non-registered User
