@@ -73,12 +73,38 @@ app.get('/createUser', (req, res) => {
     res.status(400).send("Missing parameters");
   }
   else {
-    db.run('INSERT OR REPLACE INTO users (userID, nickName) VALUES(?, ?)', [userID, nickName], (err) => {
+    db.run('INSERT OR IGNORE INTO users (userID, nickName) VALUES(?, ?)', [userID, nickName], function (err) {
       if (err) {
         res.status(500).send(err);
       }
+      else if (this.changes == 0) {
+        res.status(400).send("User '" + userID + "' already exists");
+      }
       else {
-        res.status(200).end();
+        res.status(200).send("User created");
+      }
+    });
+  }
+});
+
+app.get('/updateUser', (req, res) => {
+  var userID = req.query.userID;
+  var nickName = req.query.nickName;
+
+  if (userID == undefined
+      || nickName == undefined) {
+    res.status(400).send("Missing parameters");
+  }
+  else {
+    db.run(`UPDATE users SET nickName = ? WHERE userID = ?`, [nickName, userID], function (err) {
+      if (err) {
+        res.status(500).send(err);
+      }
+      else if (this.changes == 0) {
+        res.status(400).send("No such user '" + userID + "'");
+      }
+      else {
+        res.status(200).send("User updated");
       }
     });
   }
