@@ -312,11 +312,14 @@ app.get('/createStation', (req, res) => {
     res.status(400).send("Missing parameters");
   }
   else {
-    db.run(`INSERT OR REPLACE INTO stations (stationID, name, question, answer, x_val, y_val)
+    db.run(`INSERT OR IGNORE INTO stations (stationID, name, question, answer, x_val, y_val)
             VALUES(?, ?, ?, ?, ?, ?)`,
-           [stationID, name, question, answer, x_val, y_val], (err, row) => {
+           [stationID, name, question, answer, x_val, y_val], function (err, row) {
              if (err) {
                res.status(500).send(err);
+             }
+             else if (this.changes == 0) {
+               res.status(400).send("Station '" + stationID + "' already exists");
              }
              else {
                res.status(200).send("Station created");
