@@ -73,38 +73,12 @@ app.get('/createUser', (req, res) => {
     res.status(400).send("Missing parameters");
   }
   else {
-    db.run('INSERT OR IGNORE INTO users (userID, nickName) VALUES(?, ?)', [userID, nickName], function (err) {
+    db.run('INSERT OR REPLACE INTO users (userID, nickName) VALUES(?, ?)', [userID, nickName], (err) => {
       if (err) {
         res.status(500).send(err);
       }
-      else if (this.changes == 0) {
-        res.status(400).send("User '" + userID + "' already exists");
-      }
       else {
-        res.status(200).send("User created");
-      }
-    });
-  }
-});
-
-app.get('/updateUser', (req, res) => {
-  var userID = req.query.userID;
-  var nickName = req.query.nickName;
-
-  if (userID == undefined
-      || nickName == undefined) {
-    res.status(400).send("Missing parameters");
-  }
-  else {
-    db.run(`UPDATE users SET nickName = ? WHERE userID = ?`, [nickName, userID], function (err) {
-      if (err) {
-        res.status(500).send(err);
-      }
-      else if (this.changes == 0) {
-        res.status(400).send("No such user '" + userID + "'");
-      }
-      else {
-        res.status(200).send("User updated");
+        res.status(200).end();
       }
     });
   }
@@ -137,31 +111,6 @@ app.get('/results/:userID/:stationID', (req, res) => {
       res.status(200).send(rows);
     }
   });
-});
-
-app.get('/deleteResult/:sessionID/:userID/:stationID', (req, res) => {
-  var sessionID = req.params.sessionID;
-  var userID = req.params.userID;
-  var stationID = req.params.stationID;
-  if (sessionID == undefined) {
-    res.status(500).send("No session active");
-  }
-  else {
-    db.run(`DELETE FROM results
-            WHERE sessionID = ?
-            AND userID = ?
-            AND stationID = ?`, [sessionID, userID, stationID], function (err) {
-              if (err) {
-                res.status(500).send(err);
-              }
-              else if (this.changes == 0) {
-                res.status(400).send("No such user/station combination '" + userID + "/" + stationID + "'");
-              }
-              else {
-                res.status(200).send("Result cleared");
-              }
-            });
-  }
 });
 
 app.post('/answer', (req, res) => {
@@ -345,32 +294,6 @@ app.get('/userDetail/:sessionID/:userID', (req, res) => {
   });
 });
 
-app.get('/stations', (req, res) => {
-  db.all(`SELECT stationID FROM stations`, (err, rows) => {
-    if (err) {
-      res.status(500).send(err);
-    }
-    else {
-      res.status(200).send(rows.map(r => r.stationID));
-    }
-  });
-});
-
-app.get('/stations/:stationID', (req, res) => {
-  var stationID = req.params.stationID;
-  db.get(`SELECT * FROM stations WHERE stationID = ?`, [stationID], (err, row) => {
-    if (err) {
-      res.status(500).send(err);
-    }
-    else if (row == undefined) {
-      res.status(400).send("Station '" + stationID + "' does not exist");
-    }
-    else {
-      res.status(200).send(row);
-    }
-  });
-});
-
 // Create or update station information
 app.get('/createStation', (req, res) => {
   var stationID = req.query.stationID;
@@ -389,56 +312,15 @@ app.get('/createStation', (req, res) => {
     res.status(400).send("Missing parameters");
   }
   else {
-    db.run(`INSERT OR IGNORE INTO stations (stationID, name, question, answer, x_val, y_val)
+    db.run(`INSERT OR REPLACE INTO stations (stationID, name, question, answer, x_val, y_val)
             VALUES(?, ?, ?, ?, ?, ?)`,
-           [stationID, name, question, answer, x_val, y_val], function (err) {
+           [stationID, name, question, answer, x_val, y_val], function (err, row) {
+             console.log(this);
              if (err) {
                res.status(500).send(err);
-             }
-             else if (this.changes == 0) {
-               res.status(400).send("Station '" + stationID + "' already exists");
              }
              else {
                res.status(200).send("Station created");
-             }
-           });
-  }
-});
-
-app.get('/updateStation', (req, res) => {
-  var stationID = req.query.stationID;
-  var name = req.query.name;
-  var question = req.query.question;
-  var answer = req.query.answer;
-  var x_val = req.query.x_val;
-  var y_val = req.query.y_val;
-
-  if (stationID == undefined
-      || (name == undefined
-          && question == undefined
-          && answer == undefined
-          && x_val == undefined
-          && y_val == undefined)) {
-    res.status(400).send("Missing parameters");
-  }
-  else {
-    db.run(`UPDATE stations
-            SET
-              name = coalesce(name, ?),
-              question = coalesce(question, ?),
-              answer = coalesce(answer, ?),
-              x_val = coalesce(x_val, ?),
-              y_val = coalesce(y_val, ?)
-           WHERE stationID = ?`,
-           [name, question, answer, x_val, y_val, stationID], function (err) {
-             if (err) {
-               res.status(500).send(err);
-             }
-             else if (this.changes == 0) {
-               res.status(404).send("Station '" + stationID + "' does not exist");
-             }
-             else {
-               res.status(200).send("Station updated");
              }
            });
   }
@@ -536,6 +418,7 @@ app.get('/config', (req,res) => {
   res.status(200).send("Scavenger: OK");
 });
 
+
 app.get('/validate', (req,res) => {
   var time = req.query.time;
   var nodeID = req.query.nodeID;
@@ -594,5 +477,6 @@ app.get('/validate', (req,res) => {
 
   res.status(200).send("Scavenger: OK");
 });
+
 
 app.listen(port);
