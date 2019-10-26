@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="css/makerstyle.css" rel="stylesheet" type="text/css" />
+  <title>EW Makerfaire IoT Hunt Portal</title>
+  <h1>Valencia College's Embedded Workshop</h1>
+  <h2>Makerfaire IoT Scavenger Hunt</h2>
+  <h3>Welcome Embedded People!</h3>
+</head>
+
+<body>
+  <p class="title">Station Management Controls:</p>
+  <button class="collapsible">Station Creation</button>
+  <div class="content">
+    <form name="staForm" action="/createStation" method="get">
+      <fieldset>
+        Station Number:<br>
+        <input type="number" name="stationID" min="1" max="5000" required>
+        <br><br>
+        Station Name:<br>
+        <input type="text" name="name" value="">
+        <br><br>
+        Location: X Value<br>
+        <input type="number" name="x_val" min="1" max="1024">
+        <br><br>
+        Location: Y Value<br>
+        <input type="number" name="y_val" min="1" max="1024">
+        <br><br>
+        Question:<br>
+        <input type="text" name="question" value="">
+        <br><br>
+        Answer:<br>
+        <input type="number" name="answer" min="1" max="9999"><br>
+        (number)<br>
+        <br><br>
+        <input type="submit" value="Submit">
+        <br><br>
+    </form>
+  </div>
+  <button class="collapsible">Station Update</button>
+  <div class="content">
+    <form name="staForm" action="/updateStation" method="get">
+      <fieldset>
+        Station ID:<br>
+        <input type="number" name="stationID" min="1" max="5000" required>
+        <br><br>
+        Change Station Name:<br>
+        <input type="text" name="name" value="">
+        <br><br>
+        Update Location: X Value<br>
+        <input type="number" name="x_val" min="1" max="1024">
+        <br><br>
+        Update Location: Y Value<br>
+        <input type="number" name="y_val" min="1" max="1024">
+        <br><br>
+        Update Question:<br>
+        <input type="text" name="question" value="">
+        <br><br>
+        Update Answer:<br>
+        <input type="number" name="answer" min="1" max="9999"><br>
+        (number)<br>
+        <br><br>
+        <input type="submit" value="Submit">
+        <br><br>
+    </form>
+  </div>
+  <br><br>
+
+  <p class="title">User Management Controls:</p>
+  <button type="button" class="collapsible">User Creation</button>
+  <div class="content">
+    <form name="userForm" action="/createUser" method="get">
+      <fieldset>
+        New User ID:<br>
+        <input type="number" name="userID" min="1" max="5000" required><br>
+        (4 digits)
+        <br><br>
+        Nickname:<br>
+        <input type="text" name="nickName" value="">
+        <br><br>
+        <input type="submit" value="Submit">
+    </form>
+    <p id="check"></p>
+  </div>
+  <button type="button" class="collapsible">Reset User Station Attempts</button>
+  <div class="content">
+    <fieldset>
+      User ID:<br>
+      <input type="number" name="userID" min="1" max="5000" required>
+      <br><br>
+      Station ID:<br>
+      <input type="number" name="stationID" min="1" max="5000" required>
+      <br><br>
+      Reset User Attempts
+      <input type="reset" value="Reset">
+      <br><br>
+      </form>
+  </div><br><br>
+
+  <p class="title">Session Management Controls:</p>
+  <button type="button" class="collapsible">Enable Session</button>
+  <div class="content">
+    <fieldset>
+      <label>Select Session:</label>
+      <br><br>
+      <label for "session1">Session 1</label>
+      <input type="radio" name="sessionID" value="Session 1" id="session1">
+      <br><br>
+      <label for "session2">Session 2</label>
+      <input type="radio" name="sessionID" value="Session 2" id="session2">
+      <br><br>
+  </div>
+
+  <script src="scripts/collapse.js"></script>
+</body>
+<br><br>
+
+<footer>
+</footer>
+
+</html>
