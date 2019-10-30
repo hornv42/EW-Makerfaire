@@ -2,7 +2,7 @@ const express = require('express');
 const sqlite3 = require('sqlite3');
 
 const app = express();
-app.use(express.json());
+app.use(express.urlencoded());
 app.use('/static', express.static('static'));
 
 const db = new sqlite3.Database('./database.db');
@@ -64,12 +64,12 @@ app.get('/users/:userID', (req, res) => {
 });
 
 // Create or update user information for userID
-app.get('/createUser', (req, res) => {
+app.post('/createUser', (req, res) => {
   var userID = req.query.userID;
   var nickName = req.query.nickName;
 
   if (userID == undefined
-      || nickName == undefined) {
+    || nickName == undefined) {
     res.status(400).send("Missing parameters");
   }
   else {
@@ -87,12 +87,12 @@ app.get('/createUser', (req, res) => {
   }
 });
 
-app.get('/updateUser', (req, res) => {
-  var userID = req.query.userID;
-  var nickName = req.query.nickName;
+app.post('/updateUser', (req, res) => {
+  var userID = req.body.userID;
+  var nickName = req.body.nickName;
 
   if (userID == undefined
-      || nickName == undefined) {
+    || nickName == undefined) {
     res.status(400).send("Missing parameters");
   }
   else {
@@ -139,10 +139,10 @@ app.get('/results/:userID/:stationID', (req, res) => {
   });
 });
 
-app.get('/deleteResult/:sessionID/:userID/:stationID', (req, res) => {
-  var sessionID = req.params.sessionID;
-  var userID = req.params.userID;
-  var stationID = req.params.stationID;
+app.post('/deleteResult', (req, res) => {
+  var sessionID = req.body.sessionID;
+  var userID = req.body.userID;
+  var stationID = req.body.stationID;
   if (sessionID == undefined) {
     res.status(500).send("No session active");
   }
@@ -151,16 +151,16 @@ app.get('/deleteResult/:sessionID/:userID/:stationID', (req, res) => {
             WHERE sessionID = ?
             AND userID = ?
             AND stationID = ?`, [sessionID, userID, stationID], function (err) {
-              if (err) {
-                res.status(500).send(err);
-              }
-              else if (this.changes == 0) {
-                res.status(400).send("No such user/station combination '" + userID + "/" + stationID + "'");
-              }
-              else {
-                res.status(200).send("Result cleared");
-              }
-            });
+      if (err) {
+        res.status(500).send(err);
+      }
+      else if (this.changes == 0) {
+        res.status(400).send("No such user/station combination '" + userID + "/" + stationID + "'");
+      }
+      else {
+        res.status(200).send("Result cleared");
+      }
+    });
   }
 });
 
@@ -372,53 +372,53 @@ app.get('/stations/:stationID', (req, res) => {
 });
 
 // Create or update station information
-app.get('/createStation', (req, res) => {
-  var stationID = req.query.stationID;
-  var name = req.query.name;
-  var question = req.query.question;
-  var answer = req.query.answer;
-  var x_val = req.query.x_val;
-  var y_val = req.query.y_val;
+app.post('/createStation', (req, res) => {
+  var stationID = req.body.stationID;
+  var name = req.body.name;
+  var question = req.body.question;
+  var answer = req.body.answer;
+  var x_val = req.body.x_val;
+  var y_val = req.body.y_val;
 
   if (stationID == undefined
-      || name == undefined
-      || question == undefined
-      || answer == undefined
-      || x_val == undefined
-      || y_val == undefined) {
+    || name == undefined
+    || question == undefined
+    || answer == undefined
+    || x_val == undefined
+    || y_val == undefined) {
     res.status(400).send("Missing parameters");
   }
   else {
     db.run(`INSERT OR IGNORE INTO stations (stationID, name, question, answer, x_val, y_val)
             VALUES(?, ?, ?, ?, ?, ?)`,
-           [stationID, name, question, answer, x_val, y_val], function (err) {
-             if (err) {
-               res.status(500).send(err);
-             }
-             else if (this.changes == 0) {
-               res.status(400).send("Station '" + stationID + "' already exists");
-             }
-             else {
-               res.status(200).send("Station created");
-             }
-           });
+      [stationID, name, question, answer, x_val, y_val], function (err) {
+        if (err) {
+          res.status(500).send(err);
+        }
+        else if (this.changes == 0) {
+          res.status(400).send("Station '" + stationID + "' already exists");
+        }
+        else {
+          res.status(200).send("Station created");
+        }
+      });
   }
 });
 
-app.get('/updateStation', (req, res) => {
-  var stationID = req.query.stationID;
-  var name = req.query.name;
-  var question = req.query.question;
-  var answer = req.query.answer;
-  var x_val = req.query.x_val;
-  var y_val = req.query.y_val;
+app.post('/updateStation', (req, res) => {
+  var stationID = req.body.stationID;
+  var name = req.body.name;
+  var question = req.body.question;
+  var answer = req.body.answer;
+  var x_val = req.body.x_val;
+  var y_val = req.body.y_val;
 
   if (stationID == undefined
-      || (name == undefined
-          && question == undefined
-          && answer == undefined
-          && x_val == undefined
-          && y_val == undefined)) {
+    || (name == undefined
+      && question == undefined
+      && answer == undefined
+      && x_val == undefined
+      && y_val == undefined)) {
     res.status(400).send("Missing parameters");
   }
   else {
@@ -430,17 +430,17 @@ app.get('/updateStation', (req, res) => {
               x_val = coalesce(x_val, ?),
               y_val = coalesce(y_val, ?)
            WHERE stationID = ?`,
-           [name, question, answer, x_val, y_val, stationID], function (err) {
-             if (err) {
-               res.status(500).send(err);
-             }
-             else if (this.changes == 0) {
-               res.status(404).send("Station '" + stationID + "' does not exist");
-             }
-             else {
-               res.status(200).send("Station updated");
-             }
-           });
+      [name, question, answer, x_val, y_val, stationID], function (err) {
+        if (err) {
+          res.status(500).send(err);
+        }
+        else if (this.changes == 0) {
+          res.status(404).send("Station '" + stationID + "' does not exist");
+        }
+        else {
+          res.status(200).send("Station updated");
+        }
+      });
   }
 });
 
@@ -452,7 +452,7 @@ const ErrorUserRepeat = 5;           //User has already entered a value
 const ErrorUndefinedData = 6;        //If any of the data is UNDEFINED - send this error
 const ErrorUserLockout = 7;
 
-app.get('/server-check', (req,res) => {
+app.get('/server-check', (req, res) => {
   var nodeID = req.query.nodeID;
   var time = req.query.time;
   console.log("ServerCheck ID: " + nodeID);
@@ -468,7 +468,7 @@ app.get('/heartbeat', (req, res) => {
   var time = req.query.time;
   var nodeID = req.query.nodeID; //either a value or undefined
 
-  console.log("Heartbeat - nodeID: "+ nodeID +" -- time: "+ time);
+  console.log("Heartbeat - nodeID: " + nodeID + " -- time: " + time);
 
   //1) Node is Letting Server know it is alive
   //      Server needs to keep track of all nodes and send ALERT if a Node does not ping periodically
@@ -483,7 +483,7 @@ app.get('/heartbeat', (req, res) => {
     return;
   }
 
-  if (nodeID>=90) {
+  if (nodeID >= 90) {
     //Not certain if we should send 400 code (current NODE F/W would not accept work)
     console.log("HeartBeat: Test Code - nodeID>=90");
     res.status(200).send("Scavenger: ERROR" + ErrorNodeID);
@@ -493,13 +493,13 @@ app.get('/heartbeat', (req, res) => {
   res.status(200).send("Scavenger: OK");
 });
 
-app.get('/config', (req,res) => {
+app.get('/config', (req, res) => {
   var time = req.query.time;
   var nodeID = req.query.nodeID;
   var queryID = req.query.queryID;
   var mac = req.query.MAC;
 
-  console.log("config - nodeID: "+ nodeID + "- queryID: "+ queryID + " - mac: "+ mac);
+  console.log("config - nodeID: " + nodeID + "- queryID: " + queryID + " - mac: " + mac);
 
   //This is the NODE registering itself with the Server
   //Server has the following checks it needs to perform
@@ -520,14 +520,12 @@ app.get('/config', (req,res) => {
     return;
   }
 
-  if (nodeID>=50)
-  {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+  if (nodeID >= 50) {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
     console.log("Config - Test Code - nodeID>=50");
     res.status(200).send("Scavenger: ERROR" + ErrorNodeID);
     return;
   }
-  if (queryID >= 20 && queryID < 40)
-  {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+  if (queryID >= 20 && queryID < 40) {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
     console.log("Config - Test Code - 20 <= queryID < 40");
     res.status(200).send("Scavenger: ERROR" + ErrorQueryID);
     return;
@@ -536,14 +534,14 @@ app.get('/config', (req,res) => {
   res.status(200).send("Scavenger: OK");
 });
 
-app.get('/validate', (req,res) => {
+app.get('/validate', (req, res) => {
   var time = req.query.time;
   var nodeID = req.query.nodeID;
   var queryID = req.query.queryID;
   var queryValue = req.query.queryValue;
   var userID = req.query.userID;
 
-  console.log("validate - nodeID: "+ req.params.nodeID);
+  console.log("validate - nodeID: " + req.params.nodeID);
 
   //This is the userID and queryValue check
   // 1) All parameters are required (except time) - error if any UNDEFINED (400 Code)
@@ -560,33 +558,28 @@ app.get('/validate', (req,res) => {
   //      If Valid - UserID is recorded for this Node
 
   //TEST CODE - this is to test NODE ERROR PATHS - not the server logic
-  if (!nodeID || !queryID || !userID || !queryValue)
-  {
+  if (!nodeID || !queryID || !userID || !queryValue) {
     console.log("Validate: Test Code - UNDEFINED DATA");
     res.status(400).send("Scavenger: ERROR" + ErrorUndefinedData);
-    return ;
+    return;
   }
-  if (userID>=0x5000)
-  {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+  if (userID >= 0x5000) {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
     console.log("Validate: Test Code - userID >= 0x5000");
     res.status(200).send("Scavenger: ERROR" + ErrorUserID);
     return;
   }
-  if (userID>=0x6000)
-  {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+  if (userID >= 0x6000) {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
     console.log("Validate: Test Code - userID >= 0x6000");
     res.status(200).send("Scavenger: ERROR" + ErrorUserRepeat);
     return;
   }
-  if (userID>=0x7000)
-  {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+  if (userID >= 0x7000) {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
     console.log("Validate: Test Code - userID >= 0x7000");
     res.status(200).send("Scavenger: ERROR" + ErrorUserLockout);
     return;
   }
 
-  if (queryValue >= 5)
-  {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
+  if (queryValue >= 5) {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
     console.log("Validate: Test Code - queryValue >= 5");
     res.status(200).send("Scavenger: ERROR" + ErrorQueryValue);
     return;
