@@ -13,12 +13,7 @@ var sessionID = undefined;
 
 // Get sessionID
 app.get('/session', (req, res) => {
-  if (sessionID == undefined) {
-    res.status(500).send("No session active.");
-  }
-  else {
-    res.status(200).send({ sessionID: sessionID });
-  }
+  res.status(200).send({ sessionID: sessionID });
 });
 
 // Post sets sessionID
