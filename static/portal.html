@@ -14,7 +14,7 @@
   <p class="title">Station Management Controls:</p>
   <button class="collapsible">Station Creation</button>
   <div class="content">
-    <form name="createStaForm" action="/createStation" method="post">
+    <form id="createStaForm">
       <fieldset>
         Station Number:<br />
         <input type="number" name="stationID" min="1" max="5000" required />
@@ -43,7 +43,7 @@
   <br>
   <button class="collapsible">Station Update</button>
   <div class="content">
-    <form name="updateStaForm" action="/updateStation" method="post">
+    <form id="updateStaForm">
       <fieldset>
         Station ID:<br>
         <input type="number" name="stationID" min="1" max="5000" required />
@@ -65,18 +65,6 @@
         (number)<br>
         <br>
         <input type="submit" value="Submit" />
-
-        $.ajax({
-        type: 'POST',
-        url: '/createStation',
-        success: createStaForm(resp) {
-
-        },
-        error: createStaForm() {
-
-        }
-        });
-
         <br><br>
       </fieldset>
     </form>
@@ -86,7 +74,7 @@
   <p class="title">User Management Controls:</p>
   <button type="button" class="collapsible">Create User</button>
   <div class="content">
-    <form name="createUserForm" action="/createUser" method="post">
+    <form id="createUserForm">
       <fieldset>
         New User ID:<br>
         <input type="number" name="userID" min="1" max="5000" required /><br>
@@ -102,7 +90,7 @@
   </div>
   <button type="button" class="collapsible">Update User</button>
   <div class="content">
-    <form name="updateUserForm" action="/updateUser" method="post">
+    <form id="updateUserForm">
       <fieldset>
         User ID:<br>
         <input type="number" name="userID" min="1" max="5000" required /><br>
@@ -118,7 +106,7 @@
   </div>
   <button type="button" class="collapsible">Reset User Station Attempts</button>
   <div class="content">
-    <form name="resetAttemptForm" action="/deleteResult" method="post">
+    <form id="resetAttemptForm">
       <fieldset>
         User ID:<br>
         <input type="number" name="userID" min="1" max="5000" required />
@@ -127,7 +115,7 @@
         <input type="number" name="stationID" min="1" max="5000" required />
         <br><br>
         Reset User Attempts
-        <input type="reset" value="Reset" />
+        <input type="submit" value="Reset" />
         <br><br>
       </fieldset>
     </form>
@@ -137,20 +125,73 @@
   <p class="title">Session Management Controls:</p>
   <button type="button" class="collapsible">Enable Session</button>
   <div class="content">
-    <form name="setSessionForm" action="/session" method="post">
+    <form id="setSessionForm">
       <fieldset>
         <label>Select Session:</label>
         <br><br>
         <label for "session1">Session 1</label>
-        <input type="radio" name="sessionID" value="Session 1" id="session1" />
+        <input type="radio" name="sessionID" value="1" id="sessionID"/>
         <br><br>
-        <label for "session2">Session 2</label>
-        <input type="radio" name="sessionID" value="Session 2" id="session2" />
+        <label id="myLabel" for "session2">Session 2</label>
+        <input type="radio" name="sessionID" value="2" id="sessionID" />
+        <br><br>
+        <input type="submit" value="Submit" />
         <br><br>
       </fieldset>
     </form>
   </div>
   <br>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+  <script type="text/javascript">
+    function SubmitAndUpdate(form, url, respText) {
+      $.ajax(
+        {
+          type: 'POST',
+          url: url,
+          success: function (resp) {
+            alert("Success: " + resp);
+            $(respText).html(String(resp));
+          },
+          error: function (xhr, _, _) { //jquery XML HTTP Response, textStatus, error thrown.
+            alert(xhr.responseText);
+          },
+          data: $(form).serialize()
+        });
+    }
+      $(document).ready(function () {
+        $("#createStaForm").submit(function (event) {
+          event.preventDefault();
+          SubmitAndUpdate("#createStaForm", "/createStation", "#responseThing")
+        });
+
+        $("#updateStaForm").submit(function (event) {
+          event.preventDefault();
+          SubmitAndUpdate("#updateStaForm", "/updateStation", "#responseThing")
+        });
+
+        $("#createUserForm").submit(function (event) {
+          event.preventDefault();
+          SubmitAndUpdate("#createUserForm", "/createUser", "#responseThing")
+        });
+
+        $("#updateUserForm").submit(function (event) {
+          event.preventDefault();
+          SubmitAndUpdate("#updateUserForm", "/updateUser", "#responseThing")
+        });
+
+        $("#resetAttemptForm").submit(function (event) {
+          event.preventDefault();
+          SubmitAndUpdate("#resetAttemptForm", "/deleteResult", "#responseThing")
+        });
+
+        $("#setSessionForm").submit(function (event) {
+          event.preventDefault();
+          SubmitAndUpdate("#setSessionForm", "/session", "#responseThing")
+        });
+      });
+  </script>
+
   <script src="scripts/collapse.js"></script>
 </body>
 <br>

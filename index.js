@@ -65,8 +65,8 @@ app.get('/users/:userID', (req, res) => {
 
 // Create or update user information for userID
 app.post('/createUser', (req, res) => {
-  var userID = req.query.userID;
-  var nickName = req.query.nickName;
+  var userID = req.body.userID;
+  var nickName = req.body.nickName;
 
   if (userID == undefined
     || nickName == undefined) {
@@ -379,7 +379,7 @@ app.post('/createStation', (req, res) => {
   var answer = req.body.answer;
   var x_val = req.body.x_val;
   var y_val = req.body.y_val;
-
+console.log("Got called with: " + JSON.stringify(req.body));
   if (stationID == undefined
     || name == undefined
     || question == undefined
