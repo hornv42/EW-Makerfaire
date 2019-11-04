@@ -20,12 +20,12 @@ app.get('/session', (req, res) => {
 app.post('/session', (req, res) => {
   var newSession = req.body.sessionID;
 
-  if (!Number.isInteger(newSession)) {
-    res.status(400).send("Invalid session ID: '" + String(sessionID) + "'");
+  if (newSession == undefined) {
+    res.status(400).send("Invalid session ID: '" + String(newSession) + "'");
   }
   else {
-    sessionID = newSession;
-    res.status(200).end();
+    sessionID = parseInt(newSession);
+    res.status(200).send("Session ID set to " + newSession);
   }
 });
 
