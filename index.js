@@ -9,7 +9,7 @@ const db = new sqlite3.Database('./database.db');
 const port = 3000;
 const maxNumAttempts = 3;
 
-var sessionID = undefined;
+var sessionID = 1;
 
 // Get sessionID
 app.get('/session', (req, res) => {
@@ -139,7 +139,7 @@ app.post('/deleteResult', (req, res) => {
   var userID = req.body.userID;
   var stationID = req.body.stationID;
   if (sessionID == undefined) {
-    res.status(500).send("No session active");
+    res.status(500).send("No Active Session");
   }
   else {
     db.run(`DELETE FROM results
@@ -170,7 +170,7 @@ app.post('/answer', (req, res) => {
 
   if (sessionID == undefined) {
     res.status(500);
-    res.send("No session active");
+    res.send("No Active Session");
   }
   else if (!Number.isInteger(userID)
     || !Number.isInteger(stationID)
@@ -446,6 +446,14 @@ const ErrorQueryValue = 4;           //Invalid Value
 const ErrorUserRepeat = 5;           //User has already entered a value
 const ErrorUndefinedData = 6;        //If any of the data is UNDEFINED - send this error
 const ErrorUserLockout = 7;
+const StrScavengerOK = "Scavenger: OK";
+const StrErrorNodeID = "Scavenger: ERROR" + ErrorNodeID;
+const StrErrorQueryID = "Scavenger: ERROR" + ErrorQueryID;
+const StrErrorUserID = "Scavenger: ERROR" + ErrorUserID;
+const StrErrorQueryValue = "Scavenger: ERROR" + ErrorQueryValue;
+const StrErrorUserRepeat = "Scavenger: ERROR" + ErrorUserRepeat;
+const StrErrorUndefinedData = "Scavenger: ERROR" + ErrorUndefinedData;
+const StrErrorUserLockout = "Scavenger: ERROR" + ErrorUserLockout;
 
 app.get('/server-check', (req, res) => {
   var nodeID = req.query.nodeID;
@@ -530,57 +538,97 @@ app.get('/config', (req, res) => {
 });
 
 app.get('/validate', (req, res) => {
-  var time = req.query.time;
-  var nodeID = req.query.nodeID;
-  var queryID = req.query.queryID;
-  var queryValue = req.query.queryValue;
-  var userID = req.query.userID;
+  var timestamp = Date.now();
+  var stationID = req.query.nodeID;
+  // User ID is sent as decimal representation of the hex input, so parse it first
+  var userID = parseInt(req.query.userID);
+  var attemptAnswer = req.query.queryValue;
+  console.log("Testing");
 
-  console.log("validate - nodeID: " + req.params.nodeID);
+  console.dir(req.query);
 
-  //This is the userID and queryValue check
-  // 1) All parameters are required (except time) - error if any UNDEFINED (400 Code)
-  // 2) Verify that NodeID and QueryID match Configed values (just safety)
-  // 3) Verify that UserID is valid/Registered - if not ERROR-UserID
-  // 4) Verify that UserID has not entered data in the past
-  //      If already Entered & Correct - just consider they forgot - and send ERROR-REPEAT
-  //      If they have entered BAD data each time - after 3 attempts they are Locked out of this NODE
-  // 5) Query Value check - the Query ID creates several possiblities -
-  //      If QueryID = 0 -- Value is ignored and is considered Valid - send OK response
-  //      if QueryID = 50.59 -- Value is to match last digit (i.e. ID=52-Val=2, ID=57-Val=7)
-  //      If QueryID = 1..49 - These are from the Question List - those answers are somewhere else
-  //      An error here results in the ERROR-BadQueryValue being returned
-  //      If Valid - UserID is recorded for this Node
 
-  //TEST CODE - this is to test NODE ERROR PATHS - not the server logic
-  if (!nodeID || !queryID || !userID || !queryValue) {
-    console.log("Validate: Test Code - UNDEFINED DATA");
-    res.status(400).send("Scavenger: ERROR" + ErrorUndefinedData);
+  if (stationID == undefined
+    || Number.isNaN(userID)
+    || attemptAnswer == undefined
+    || sessionID == undefined) {
+    res.status(200).send(StrErrorUndefinedData);
     return;
   }
-  if (userID >= 0x5000) {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
-    console.log("Validate: Test Code - userID >= 0x5000");
-    res.status(200).send("Scavenger: ERROR" + ErrorUserID);
-    return;
-  }
-  if (userID >= 0x6000) {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
-    console.log("Validate: Test Code - userID >= 0x6000");
-    res.status(200).send("Scavenger: ERROR" + ErrorUserRepeat);
-    return;
-  }
-  if (userID >= 0x7000) {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
-    console.log("Validate: Test Code - userID >= 0x7000");
-    res.status(200).send("Scavenger: ERROR" + ErrorUserLockout);
-    return;
-  }
+  else {
+    // Then convert it back to hex so we get the actual inputed value
+    userID = userID.toString(16);
 
-  if (queryValue >= 5) {    //Not certain if we should send 400 code (current NODE F/W would not accept work)
-    console.log("Validate: Test Code - queryValue >= 5");
-    res.status(200).send("Scavenger: ERROR" + ErrorQueryValue);
-    return;
+    db.run(`INSERT INTO results
+            (sessionID, userID, stationID, userAnswer, timestamp, numAttempts)
+            VALUES($sessionID, $userID, $stationID, $userAnswer, $timestamp, 1)
+            ON CONFLICT(sessionID, userID, stationID)
+            DO UPDATE SET
+              userAnswer = $userAnswer,
+              timestamp = $timestamp,
+              numAttempts = numAttempts + 1
+            WHERE numAttempts < $maxNumAttempts
+            AND EXISTS (SELECT * FROM users WHERE userID = $userID)
+            AND NOT EXISTS (SELECT * FROM stations WHERE stationID = results.stationID AND answer = userAnswer)`,
+      {
+        $sessionID: sessionID,
+        $userID: userID,
+        $stationID: stationID,
+        $userAnswer: attemptAnswer,
+        $timestamp: timestamp,
+        $maxNumAttempts: maxNumAttempts
+      },
+      function (err) {
+        var changedRows = this.changes;
+        if (err) {
+          console.log("SQLite error: " + err);
+          res.status(500).send(err);
+        }
+        else {
+          // Check if the latest answer is correct
+          db.get(`SELECT stations.answer = results.userAnswer as correct
+                       FROM stations
+                       JOIN results ON stations.stationID = results.stationID
+                       WHERE results.sessionID = ?
+                       AND results.userID = ?
+                       AND results.stationID = ?`,
+            [sessionID, userID, stationID],
+            (err, row) => {
+              if (err) {
+                console.log("SQLite error: " + err);
+                res.status(500).send(err);
+              }
+              else if (row === undefined) {
+                // Can't tell if user ID or station ID incorrect
+                console.log("undefined");
+                res.status(200).send(StrErrorUserID);
+              }
+              else if (row.correct == 0 && changedRows == 0) {
+                console.log("lockout");
+                //Incorrect and we didn't insert anything
+                res.status(200).send(StrErrorUserLockout);
+              }
+              else if (row.correct == 1 && changedRows == 0) {
+                //Correct but we didn't insert anything
+                console.log("repeat");
+                res.status(200).send(StrErrorUserRepeat);
+              }
+              else if (row.correct == 1) {
+                //Correct
+                console.log("correct");
+                res.status(200).send(StrScavengerOK);
+              }
+              else {
+                //Incorrect
+                console.log("incorrect");
+                res.status(200).send(StrErrorQueryValue);
+              }
+            });
+        }
+      });
   }
-
-  res.status(200).send("Scavenger: OK");
 });
+
+
 
 app.listen(port);
