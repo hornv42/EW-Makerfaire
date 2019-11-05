@@ -8,6 +8,7 @@
   <h1>Valencia College's Embedded Workshop</h1>
   <h2>Makerfaire IoT Scavenger Hunt</h2>
   <h3>Welcome Embedded People!</h3>
+  <h4>Session ID: <span id=sessionID></span></h4>
 </head>
 
 <body>
@@ -129,70 +130,114 @@
       <fieldset>
         <label>Select Session:</label>
         <br><br>
-        <label for "session1">Session 1</label>
-        <input type="radio" name="sessionID" value="1" id="sessionID"/>
-        <br><br>
-        <label id="myLabel" for "session2">Session 2</label>
-        <input type="radio" name="sessionID" value="2" id="sessionID" />
-        <br><br>
+        <fieldset id="saturday">
+          <b>Saturday</b><br><br>
+          <label for "session1">Session 1</label>
+          <input type="radio" name="sessionID" value="1" id="sessionID" />
+          <br><br>
+          <label for "session2">Session 2</label>
+          <input type="radio" name="sessionID" value="2" id="sessionID" />
+        </fieldset>
+        <br>
+        <fieldset id="sunday">
+          <b>Sunday</b><br><br>
+          <label for "session3">Session 3</label>
+          <input type="radio" name="sessionID" value="3" id="sessionID" />
+          <br><br>
+          <label for "session4">Session 4</label>
+          <input type="radio" name="sessionID" value="4" id="sessionID" />
+        </fieldset>
+        <br>
         <input type="submit" value="Submit" />
         <br><br>
       </fieldset>
     </form>
   </div>
   <br>
+  <div id="respModal" class="modal">
+    <div class="modal-content">
+      <div id="respBody" class="modal-body">
+      </div>
+    </div>
+  </div>
+
+
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
+  <script src="scripts/collapse.js"></script>
+
   <script type="text/javascript">
-    function SubmitAndUpdate(form, url, respText) {
-      $.ajax(
-        {
+    var respModal = $("#respModal")[0];
+    var respBody = $("#respBody")[0];
+
+    $(window).click(function (event) {
+      if (event.target == respModal) {
+        respModal.style.display = "none";
+      }
+    });
+
+    function DisplayResponse(resp, isSuccess) {
+      respBody.innerHTML = resp;
+      if (isSuccess) {
+        respBody.style.color = "green";
+      }
+      else {
+        respBody.style.color = "red";
+      }
+
+      respModal.style.display = "block";
+    }
+
+    function RegisterSubmit(form, url) {
+      $(form).submit(function (e) {
+        e.preventDefault();
+        console.log($(form).serialize());
+        $.ajax({
           type: 'POST',
           url: url,
           success: function (resp) {
-            alert("Success: " + resp);
-            $(respText).html(String(resp));
+            DisplayResponse(resp, true);
           },
-          error: function (xhr, _, _) { //jquery XML HTTP Response, textStatus, error thrown.
-            alert(xhr.responseText);
+          error: function (xhr, _, _) {
+            DisplayResponse(xhr.responseText, false);
           },
           data: $(form).serialize()
         });
-    }
-      $(document).ready(function () {
-        $("#createStaForm").submit(function (event) {
-          event.preventDefault();
-          SubmitAndUpdate("#createStaForm", "/createStation", "#responseThing")
-        });
-
-        $("#updateStaForm").submit(function (event) {
-          event.preventDefault();
-          SubmitAndUpdate("#updateStaForm", "/updateStation", "#responseThing")
-        });
-
-        $("#createUserForm").submit(function (event) {
-          event.preventDefault();
-          SubmitAndUpdate("#createUserForm", "/createUser", "#responseThing")
-        });
-
-        $("#updateUserForm").submit(function (event) {
-          event.preventDefault();
-          SubmitAndUpdate("#updateUserForm", "/updateUser", "#responseThing")
-        });
-
-        $("#resetAttemptForm").submit(function (event) {
-          event.preventDefault();
-          SubmitAndUpdate("#resetAttemptForm", "/deleteResult", "#responseThing")
-        });
-
-        $("#setSessionForm").submit(function (event) {
-          event.preventDefault();
-          SubmitAndUpdate("#setSessionForm", "/session", "#responseThing")
-        });
       });
+    }
+
+    function UpdateSessionID() {
+      $.ajax({
+        type: 'GET',
+        url: "/session",
+        success: function (resp) {
+          var sessionID = resp.sessionID;
+          if (sessionID == undefined) {
+            $("#sessionID")[0].innerHTML = "No Active Session";;
+          }
+          else {
+            $("#sessionID")[0].innerHTML = sessionID;;
+          }
+        },
+        error: function (xhr, _, _) {
+          $("#sessionID")[0].innerHTML = "Could not fetch sessionID: '" + xhr.responseText + "'";
+        }
+      });
+    }
+
+    $(document).ready(function () {
+      RegisterSubmit("#createStaForm", "/createStation");
+      RegisterSubmit("#updateStaForm", "/updateStation");
+      RegisterSubmit("#createUserForm", "/createUser");
+      RegisterSubmit("#updateUserForm", "/updateUser");
+      RegisterSubmit("#resetAttemptForm", "/deleteResult");
+      RegisterSubmit("#setSessionForm", "/session");
+      UpdateSessionID();
+      setInterval(UpdateSessionID, 5000);
+    });
   </script>
 
-  <script src="scripts/collapse.js"></script>
+
 </body>
 <br>
 
