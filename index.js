@@ -397,7 +397,7 @@ app.get('/server-check', (req, res) => {
   //  before making other requests.
   //  ALWAYS just send a OK response
   //  Not working if NODE is valid yet
-  res.status(200).send("Scavenger: OK");
+  res.status(200).send(StrScavengerOK);
 });
 
 //http://127.0.0.1:3000/heartbeat?node=20&time=1000        //WORKS - YEA
@@ -427,7 +427,7 @@ app.get('/heartbeat', (req, res) => {
     return;
   }
 
-  res.status(200).send("Scavenger: OK");
+  res.status(200).send(StrScavengerOK);
 });
 
 app.get('/config', (req, res) => {
@@ -468,7 +468,7 @@ app.get('/config', (req, res) => {
     return;
   }
 
-  res.status(200).send("Scavenger: OK");
+  res.status(200).send(StrScavengerOK);
 });
 
 app.get('/validate', (req, res) => {
