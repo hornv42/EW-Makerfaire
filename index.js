@@ -419,13 +419,13 @@ app.post('/updateStation', (req, res) => {
   else {
     db.run(`UPDATE stations
             SET
-              name = coalesce(name, ?),
-              question = coalesce(question, ?),
-              answer = coalesce(answer, ?),
-              x_val = coalesce(x_val, ?),
-              y_val = coalesce(y_val, ?)
+              name = coalesce(?, name),
+              question = coalesce(?, question),
+              answer = coalesce(?, answer),
+              x_val = coalesce(?, x_val),
+              y_val = coalesce(?, y_val)
            WHERE stationID = ?`,
-      [name, question, answer, x_val, y_val, stationID], function (err) {
+      [name || null, question || null, answer || null, x_val || null, y_val || null, stationID], function (err) {
         if (err) {
           res.status(500).send(err);
         }
