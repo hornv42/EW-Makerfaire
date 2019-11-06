@@ -159,77 +159,11 @@ app.post('/deleteResult', (req, res) => {
   }
 });
 
-app.post('/answer', (req, res) => {
-  var timestamp = Date.now();
-
-  var body = req.body;
-
-  var userID = body.userID;
-  var stationID = body.stationID;
-  var attemptAnswer = body.answer;
-
-  if (sessionID == undefined) {
-    res.status(500);
-    res.send("No Active Session");
-  }
-  else if (!Number.isInteger(userID)
-    || !Number.isInteger(stationID)
-    || !Number.isInteger(attemptAnswer)) {
-    res.status(400).send("Bad parameters");
-  }
-  else {
-    db.run(`INSERT INTO results
-            (sessionID, userID, stationID, userAnswer, timestamp, numAttempts)
-            VALUES($sessionID, $userID, $stationID, $userAnswer, $timestamp, 1)
-            ON CONFLICT(sessionID, userID, stationID)
-            DO UPDATE SET
-            userAnswer = $userAnswer,
-            timestamp = $timestamp,
-            numAttempts = numAttempts + 1
-            WHERE numAttempts < $maxNumAttempts
-            AND NOT EXISTS (SELECT * FROM stations  WHERE stationID = results.stationID AND answer = userAnswer)`,
-      {
-        $sessionID: sessionID,
-        $userID: userID,
-        $stationID: stationID,
-        $userAnswer: attemptAnswer,
-        $timestamp: timestamp,
-        $maxNumAttempts: maxNumAttempts
-      },
-      (err) => {
-        if (err) {
-          res.status(500).send(err);
-        }
-        else {
-          // Check if the latest answer is correct
-          db.get(`SELECT stations.answer = results.userAnswer as correct
-                       FROM stations
-                       JOIN results ON stations.stationID = results.stationID
-                       WHERE results.sessionID = ?
-                       AND results.userID = ?
-                       AND results.stationID = ?`,
-            [sessionID, userID, stationID],
-            (err, row) => {
-              if (err) {
-                res.status(500).send(err);
-              }
-              else if (row === undefined) {
-                res.status(500).end();
-              }
-              else {
-                res.status(200).send(row.correct == 1);
-              }
-            });
-        }
-      });
-  }
-});
-
 //For the leaderboard: Gets the session's user scores, tracking the number questions they've answered correctly and incorrectly.
 app.get('/leaderboard/:sessionID', (req, res) => {
   var sessionID = req.params.sessionID;
 
-  var query = `SELECT users.userID, users.nickName, stations.answer = results.userAnswer as correct
+  var query = `SELECT users.userID, users.nickName, results.userAnswer as correct
                   FROM users
                   JOIN results ON users.userID=results.userID
                     JOIN stations ON results.stationID=stations.stationID
@@ -293,7 +227,7 @@ app.get('/userDetail/:sessionID/:userID', (req, res) => {
   var sessionID = req.params.sessionID;
   var userID = req.params.userID;
 
-  var query = `SELECT stationID, nickName, x_val, y_val, answer = userAnswer as correct, timestamp
+  var query = `SELECT stationID, nickName, x_val, y_val, userAnswer as correct, timestamp
                 FROM stations
                 LEFT JOIN (SELECT stationID as rStationID, userAnswer, timestamp FROM results WHERE sessionID = ? AND userID = ?) ON rStationID = stations.stationID
                 JOIN (select nickName FROM users WHERE userID = ?)
@@ -561,74 +495,69 @@ app.get('/validate', (req, res) => {
 
     db.run(`INSERT INTO results
             (sessionID, userID, stationID, userAnswer, timestamp, numAttempts)
-            VALUES($sessionID, $userID, $stationID, $userAnswer, $timestamp, 1)
+            SELECT $sessionID, $userID, $stationID, $userAnswer = answer, $timestamp, 1
+            FROM stations
+            WHERE stationID = $stationID
+            AND EXISTS (SELECT 1 FROM users WHERE userID = $userID)
             ON CONFLICT(sessionID, userID, stationID)
-            DO UPDATE SET
-              userAnswer = $userAnswer,
-              timestamp = $timestamp,
-              numAttempts = numAttempts + 1
-            WHERE numAttempts < $maxNumAttempts
-            AND EXISTS (SELECT * FROM users WHERE userID = $userID)
-            AND NOT EXISTS (SELECT * FROM stations WHERE stationID = results.stationID AND answer = userAnswer)`,
-      {
-        $sessionID: sessionID,
-        $userID: userID,
-        $stationID: stationID,
-        $userAnswer: attemptAnswer,
-        $timestamp: timestamp,
-        $maxNumAttempts: maxNumAttempts
-      },
-      function (err) {
-        var changedRows = this.changes;
-        if (err) {
-          console.log("SQLite error: " + err);
-          res.status(500).send(err);
-        }
-        else {
-          // Check if the latest answer is correct
-          db.get(`SELECT stations.answer = results.userAnswer as correct
-                       FROM stations
-                       JOIN results ON stations.stationID = results.stationID
-                       WHERE results.sessionID = ?
-                       AND results.userID = ?
-                       AND results.stationID = ?`,
-            [sessionID, userID, stationID],
-            (err, row) => {
-              if (err) {
-                console.log("SQLite error: " + err);
-                res.status(500).send(err);
-              }
-              else if (row === undefined) {
-                // Can't tell if user ID or station ID incorrect
-                console.log("undefined");
-                res.status(200).send(StrErrorUserID);
-              }
-              else if (row.correct == 0 && changedRows == 0) {
-                console.log("lockout");
-                //Incorrect and we didn't insert anything
-                res.status(200).send(StrErrorUserLockout);
-              }
-              else if (row.correct == 1 && changedRows == 0) {
-                //Correct but we didn't insert anything
-                console.log("repeat");
-                res.status(200).send(StrErrorUserRepeat);
-              }
-              else if (row.correct == 1) {
-                //Correct
-                console.log("correct");
-                res.status(200).send(StrScavengerOK);
-              }
-              else {
-                //Incorrect
-                console.log("incorrect");
-                res.status(200).send(StrErrorQueryValue);
-              }
-            });
-        }
-      });
+              DO UPDATE SET
+                userAnswer = EXISTS(SELECT 1 FROM stations WHERE stationID = $stationID AND answer = $userAnswer),
+                timestamp = $timestamp,
+                numAttempts = numAttempts + 1
+              WHERE numAttempts < $maxNumAttempts
+              AND userAnswer IS NOT 1`,
+           {
+             $sessionID: sessionID,
+             $userID: userID,
+             $stationID: stationID,
+             $userAnswer: attemptAnswer,
+             $timestamp: timestamp,
+             $maxNumAttempts: maxNumAttempts
+           },
+           function (err) {
+             console.dir(this);
+             var changedRows = this.changes;
+             if (err) {
+               console.log("SQLite error: " + err);
+               res.status(500).send(err);
+             }
+             else {
+               // Check if the latest answer is correct
+               db.get(`SELECT userAnswer AS correct
+                       FROM results
+                       WHERE sessionID = ?
+                       AND userID = ?
+                       AND stationID = ?`,
+                      [sessionID, userID, stationID],
+                      (err, row) => {
+                        if (err) {
+                          console.log("SQLite error: " + err);
+                          res.status(500).send(err);
+                        }
+                        else if (row === undefined) {
+                          // Can't tell if user ID or station ID incorrect
+                          res.status(200).send(StrErrorUserID);
+                        }
+                        else if (row.correct == 0 && changedRows == 0) {
+                          //Incorrect and we didn't insert anything
+                          res.status(200).send(StrErrorUserLockout);
+                        }
+                        else if (row.correct == 1 && changedRows == 0) {
+                          //Correct but we didn't insert anything
+                          res.status(200).send(StrErrorUserRepeat);
+                        }
+                        else if (row.correct == 1) {
+                          //Correct
+                          res.status(200).send(StrScavengerOK);
+                        }
+                        else {
+                          //Incorrect
+                          res.status(200).send(StrErrorQueryValue);
+                        }
+                      });
+             }
+           });
   }
 });
-
-
 
 app.listen(port);
