@@ -9,7 +9,7 @@ const db = new sqlite3.Database('./database.db');
 const port = 3000;
 const maxNumAttempts = 3;
 
-var sessionID = 1;
+var sessionID = undefined;
 
 function validUserID(id) {
   return id instanceof String
