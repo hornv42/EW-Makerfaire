@@ -477,10 +477,6 @@ app.get('/validate', (req, res) => {
   // User ID is sent as decimal representation of the hex input, so parse it first
   var userID = parseInt(req.query.userID);
   var attemptAnswer = req.query.queryValue;
-  console.log("Testing");
-
-  console.dir(req.query);
-
 
   if (stationID == undefined
       || Number.isNaN(userID)
@@ -515,10 +511,8 @@ app.get('/validate', (req, res) => {
              $maxNumAttempts: maxNumAttempts
            },
            function (err) {
-             console.dir(this);
              var changedRows = this.changes;
              if (err) {
-               console.log("SQLite error: " + err);
                res.status(500).send(err);
              }
              else {
@@ -531,7 +525,6 @@ app.get('/validate', (req, res) => {
                       [sessionID, userID, stationID],
                       (err, row) => {
                         if (err) {
-                          console.log("SQLite error: " + err);
                           res.status(500).send(err);
                         }
                         else if (row === undefined) {
