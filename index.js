@@ -11,6 +11,11 @@ const maxNumAttempts = 3;
 
 var sessionID = 1;
 
+function validUserID(id) {
+  return id instanceof String
+    && /^\d{4}$/.test(userID);
+}
+
 // Get sessionID
 app.get('/session', (req, res) => {
   res.status(200).send({ sessionID: sessionID });
@@ -66,6 +71,9 @@ app.post('/createUser', (req, res) => {
   if (userID == undefined
       || nickName == undefined) {
     res.status(400).send("Missing parameters");
+  }
+  else if (!validUserID(userID)) {
+    res.status(400).send("User ID should be 4 digits");
   }
   else {
     db.run('INSERT OR IGNORE INTO users (userID, nickName) VALUES(?, ?)', [userID, nickName], function (err) {
