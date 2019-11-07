@@ -143,7 +143,6 @@ app.get('/results/:userID/:stationID', (req, res) => {
 });
 
 app.post('/deleteResult', (req, res) => {
-  var sessionID = req.body.sessionID;
   var userID = req.body.userID;
   var stationID = req.body.stationID;
   if (sessionID == undefined) {
