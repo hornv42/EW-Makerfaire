@@ -12,7 +12,7 @@ const maxNumAttempts = 3;
 var sessionID = undefined;
 
 function validUserID(id) {
-  return typeof(id) === "string" && /^\d{4}$/.test(id);
+  return typeof (id) === "string" && /^\d{4}$/.test(id);
 }
 
 // Get sessionID
@@ -68,7 +68,7 @@ app.post('/createUser', (req, res) => {
   var nickName = req.body.nickName;
 
   if (userID == undefined
-      || nickName == undefined) {
+    || nickName == undefined) {
     res.status(400).send("Missing parameters");
   }
   else if (!validUserID(userID)) {
@@ -94,7 +94,7 @@ app.post('/updateUser', (req, res) => {
   var nickName = req.body.nickName;
 
   if (userID == undefined
-      || nickName == undefined) {
+    || nickName == undefined) {
     res.status(400).send("Missing parameters");
   }
   else {
@@ -152,16 +152,16 @@ app.post('/deleteResult', (req, res) => {
             WHERE sessionID = ?
             AND userID = ?
             AND stationID = ?`, [sessionID, userID, stationID], function (err) {
-              if (err) {
-                res.status(500).send(err);
-              }
-              else if (this.changes == 0) {
-                res.status(400).send("No such user/station combination '" + userID + "/" + stationID + "'");
-              }
-              else {
-                res.status(200).send("Result cleared");
-              }
-            });
+      if (err) {
+        res.status(500).send(err);
+      }
+      else if (this.changes == 0) {
+        res.status(400).send("No such user/station combination '" + userID + "/" + stationID + "'");
+      }
+      else {
+        res.status(200).send("Result cleared");
+      }
+    });
   }
 });
 
@@ -316,27 +316,27 @@ app.post('/createStation', (req, res) => {
   var y_val = req.body.y_val;
 
   if (stationID == undefined
-      || name == undefined
-      || question == undefined
-      || answer == undefined
-      || x_val == undefined
-      || y_val == undefined) {
+    || name == undefined
+    || question == undefined
+    || answer == undefined
+    || x_val == undefined
+    || y_val == undefined) {
     res.status(400).send("Missing parameters");
   }
   else {
     db.run(`INSERT OR IGNORE INTO stations (stationID, name, question, answer, x_val, y_val)
             VALUES(?, ?, ?, ?, ?, ?)`,
-           [stationID, name, question, answer, x_val, y_val], function (err) {
-             if (err) {
-               res.status(500).send(err);
-             }
-             else if (this.changes == 0) {
-               res.status(400).send("Station '" + stationID + "' already exists");
-             }
-             else {
-               res.status(200).send("Station created");
-             }
-           });
+      [stationID, name, question, answer, x_val, y_val], function (err) {
+        if (err) {
+          res.status(500).send(err);
+        }
+        else if (this.changes == 0) {
+          res.status(400).send("Station '" + stationID + "' already exists");
+        }
+        else {
+          res.status(200).send("Station created");
+        }
+      });
   }
 });
 
@@ -349,11 +349,11 @@ app.post('/updateStation', (req, res) => {
   var y_val = req.body.y_val;
 
   if (stationID == undefined
-      || (name == undefined
-          && question == undefined
-          && answer == undefined
-          && x_val == undefined
-          && y_val == undefined)) {
+    || (name == undefined
+      && question == undefined
+      && answer == undefined
+      && x_val == undefined
+      && y_val == undefined)) {
     res.status(400).send("Missing parameters");
   }
   else {
@@ -365,17 +365,17 @@ app.post('/updateStation', (req, res) => {
               x_val = coalesce(?, x_val),
               y_val = coalesce(?, y_val)
            WHERE stationID = ?`,
-           [name || null, question || null, answer || null, x_val || null, y_val || null, stationID], function (err) {
-             if (err) {
-               res.status(500).send(err);
-             }
-             else if (this.changes == 0) {
-               res.status(404).send("Station '" + stationID + "' does not exist");
-             }
-             else {
-               res.status(200).send("Station updated");
-             }
-           });
+      [name || null, question || null, answer || null, x_val || null, y_val || null, stationID], function (err) {
+        if (err) {
+          res.status(500).send(err);
+        }
+        else if (this.changes == 0) {
+          res.status(404).send("Station '" + stationID + "' does not exist");
+        }
+        else {
+          res.status(200).send("Station updated");
+        }
+      });
   }
 });
 
@@ -485,9 +485,9 @@ app.get('/validate', (req, res) => {
   var attemptAnswer = req.query.queryValue;
 
   if (stationID == undefined
-      || Number.isNaN(userID)
-      || attemptAnswer == undefined
-      || sessionID == undefined) {
+    || Number.isNaN(userID)
+    || attemptAnswer == undefined
+    || sessionID == undefined) {
     res.status(200).send(StrErrorUndefinedData);
     return;
   }
@@ -497,65 +497,65 @@ app.get('/validate', (req, res) => {
 
     db.run(`INSERT INTO results
             (sessionID, userID, stationID, userAnswer, timestamp, numAttempts)
-            SELECT $sessionID, $userID, $stationID, $userAnswer = answer, $timestamp, 1
+            SELECT $sessionID, $userID, $stationID, 1, $timestamp, 1
             FROM stations
             WHERE stationID = $stationID
             AND EXISTS (SELECT 1 FROM users WHERE userID = $userID)
             ON CONFLICT(sessionID, userID, stationID)
               DO UPDATE SET
-                userAnswer = EXISTS(SELECT 1 FROM stations WHERE stationID = $stationID AND (answer ISNULL OR answer = $userAnswer)),
+                userAnswer = EXISTS(SELECT 1 FROM stations WHERE stationID = $stationID AND (answer ISNULL OR answer = 1)),
                 timestamp = $timestamp,
                 numAttempts = numAttempts + 1
               WHERE numAttempts < $maxNumAttempts
               AND userAnswer IS NOT 1`,
-           {
-             $sessionID: sessionID,
-             $userID: userID,
-             $stationID: stationID,
-             $userAnswer: attemptAnswer,
-             $timestamp: timestamp,
-             $maxNumAttempts: maxNumAttempts
-           },
-           function (err) {
-             var changedRows = this.changes;
-             if (err) {
-               res.status(500).send(err);
-             }
-             else {
-               // Check if the latest answer is correct
-               db.get(`SELECT userAnswer AS correct
+      {
+        $sessionID: sessionID,
+        $userID: userID,
+        $stationID: stationID,
+        $userAnswer: attemptAnswer,
+        $timestamp: timestamp,
+        $maxNumAttempts: maxNumAttempts
+      },
+      function (err) {
+        var changedRows = this.changes;
+        if (err) {
+          res.status(500).send(err);
+        }
+        else {
+          // Check if the latest answer is correct
+          db.get(`SELECT userAnswer AS correct
                        FROM results
                        WHERE sessionID = ?
                        AND userID = ?
                        AND stationID = ?`,
-                      [sessionID, userID, stationID],
-                      (err, row) => {
-                        if (err) {
-                          res.status(500).send(err);
-                        }
-                        else if (row === undefined) {
-                          // Can't tell if user ID or station ID incorrect
-                          res.status(200).send(StrErrorUserID);
-                        }
-                        else if (row.correct == 0 && changedRows == 0) {
-                          //Incorrect and we didn't insert anything
-                          res.status(200).send(StrErrorUserLockout);
-                        }
-                        else if (row.correct == 1 && changedRows == 0) {
-                          //Correct but we didn't insert anything
-                          res.status(200).send(StrErrorUserRepeat);
-                        }
-                        else if (row.correct == 1) {
-                          //Correct
-                          res.status(200).send(StrScavengerOK);
-                        }
-                        else {
-                          //Incorrect
-                          res.status(200).send(StrErrorQueryValue);
-                        }
-                      });
-             }
-           });
+            [sessionID, userID, stationID],
+            (err, row) => {
+              if (err) {
+                res.status(500).send(err);
+              }
+              else if (row === undefined) {
+                // Can't tell if user ID or station ID incorrect
+                res.status(200).send(StrErrorUserID);
+              }
+              else if (row.correct == 0 && changedRows == 0) {
+                //Incorrect and we didn't insert anything
+                res.status(200).send(StrErrorUserLockout);
+              }
+              else if (row.correct == 1 && changedRows == 0) {
+                //Correct but we didn't insert anything
+                res.status(200).send(StrErrorUserRepeat);
+              }
+              else if (row.correct == 1) {
+                //Correct
+                res.status(200).send(StrScavengerOK);
+              }
+              else {
+                //Incorrect
+                res.status(200).send(StrErrorQueryValue);
+              }
+            });
+        }
+      });
   }
 });
 
