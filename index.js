@@ -12,8 +12,7 @@ const maxNumAttempts = 3;
 var sessionID = undefined;
 
 function validUserID(id) {
-  return id instanceof String
-    && /^\d{4}$/.test(userID);
+  return typeof(id) === "string" && /^\d{4}$/.test(id);
 }
 
 // Get sessionID
