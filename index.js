@@ -512,7 +512,6 @@ app.get('/validate', (req, res) => {
         $sessionID: sessionID,
         $userID: userID,
         $stationID: stationID,
-        $userAnswer: attemptAnswer,
         $timestamp: timestamp,
         $maxNumAttempts: maxNumAttempts
       },
