@@ -503,7 +503,7 @@ app.get('/validate', (req, res) => {
             AND EXISTS (SELECT 1 FROM users WHERE userID = $userID)
             ON CONFLICT(sessionID, userID, stationID)
               DO UPDATE SET
-                userAnswer = EXISTS(SELECT 1 FROM stations WHERE stationID = $stationID AND answer = $userAnswer),
+                userAnswer = EXISTS(SELECT 1 FROM stations WHERE stationID = $stationID AND (answer ISNULL OR answer = $userAnswer)),
                 timestamp = $timestamp,
                 numAttempts = numAttempts + 1
               WHERE numAttempts < $maxNumAttempts
