@@ -222,6 +222,7 @@ app.get('/leaderboard/:sessionID', (req, res) => {
       };
 
       leadResults.push(userInfo);
+      leadResults.sort((a, b) => b.numCorrect - a.numCorrect);
       res.status(200).send(leadResults);
     }
   });
