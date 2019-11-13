@@ -233,18 +233,22 @@ app.get('/leaderboard/:sessionID', (req, res) => {
       let nickName = null;
       let numCorrect = null;
       let numWrong = null;
+
+      var collectResult = () => {
+        leadResults.push({
+          "userID": userID,
+          "nickName": nickName,
+          "numCorrect": numCorrect,
+          "numIncorrect": numWrong
+        });
+      };
+
       rows.forEach((row) => {
         if (userID != row.userID) {
           if (userID != null) {
-            let userInfo = {
-              "userID": userID,
-              "nickName": nickName,
-              "numCorrect": numCorrect,
-              "numIncorrect": numWrong
-            };
-
-            leadResults.push(userInfo);
+            collectResult();
           }
+
           userID = row.userID;
           nickName = row.nickName;
           numCorrect = 0;
@@ -258,14 +262,9 @@ app.get('/leaderboard/:sessionID', (req, res) => {
         }
       });
 
-      let userInfo = {
-        "userID": userID,
-        "nickName": nickName,
-        "numCorrect": numCorrect,
-        "numIncorrect": numWrong
-      };
+      // Collect the 'last' result
+      collectResult();
 
-      leadResults.push(userInfo);
       leadResults.sort((a, b) => b.numCorrect - a.numCorrect);
       res.status(200).send(leadResults);
     }
