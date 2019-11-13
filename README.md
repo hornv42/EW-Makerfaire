@@ -4,9 +4,9 @@ Greetings Embedded Workshop People!
 ## TBD:
 * Station creation (optional - can pre-bake)
 
-## Starting
+## Starting the Server
 
-On first setup, cd into the directory and:
+On first setup, cd into the [server](src/server/) directory and:
 
 ``` shell
 npm install

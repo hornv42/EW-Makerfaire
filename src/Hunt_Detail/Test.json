@@ -1,0 +1,16 @@
+{"userID":"10295","nickName":"Vikki",
+"stations":[
+{"stationID":1,"x_val":101,"y_val":103,"answer":{"correct":true,"timestamp":1571098741614}},
+{"stationID":2,"x_val":126,"y_val":112,"answer":{"correct":true,"timestamp":1571098836479}},
+{"stationID":3,"x_val":136,"y_val":103,"answer":{"correct":false,"timestamp":1571098855665}},
+{"stationID":4,"x_val":201,"y_val":210,"answer":{"correct":true,"timestamp":1571098741614}},
+{"stationID":5,"x_val":201,"y_val":201,"answer":{"correct":true,"timestamp":1571098741614}},
+{"stationID":6,"x_val":206,"y_val":201,"answer":{"correct":true,"timestamp":1571098741614}},
+{"stationID":7,"x_val":206,"y_val":210,"answer":{"correct":true,"timestamp":1571098741614}},
+{"stationID":8,"x_val":329,"y_val":301,"answer":{"correct":true,"timestamp":1571098741614}},
+{"stationID":9,"x_val":329,"y_val":307,"answer":{"correct":true,"timestamp":1571098741614}},
+{"stationID":10,"x_val":301,"y_val":301,"answer":{"correct":true,"timestamp":1571098741614}},
+{"stationID":11,"x_val":305,"y_val":304,"answer":{"correct":true,"timestamp":1571098741614}},
+{"stationID":12,"x_val":301,"y_val":307,"answer":{"correct":true,"timestamp":1571098741614}},
+{"stationID":13,"x_val":320,"y_val":304,"answer":{"correct":true,"timestamp":1571098741614}}
+]}
