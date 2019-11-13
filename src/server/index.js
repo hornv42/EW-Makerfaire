@@ -9,7 +9,7 @@ const db = new sqlite3.Database('./database.db');
 const port = 3000;
 const maxNumAttempts = 3;
 
-var sessionID = undefined;
+let sessionID = undefined;
 
 function validUserID(id) {
   return typeof (id) === "string" && /^\d{4}$/.test(id);
@@ -22,7 +22,7 @@ app.get('/session', (req, res) => {
 
 // Post sets sessionID
 app.post('/session', (req, res) => {
-  var newSession = req.body.sessionID;
+  let newSession = req.body.sessionID;
 
   if (newSession == undefined) {
     res.status(400).send("Invalid session ID: '" + String(newSession) + "'");
@@ -47,7 +47,7 @@ app.get('/users', (req, res) => {
 
 // Get information for user with specific ID
 app.get('/users/:userID', (req, res) => {
-  var userID = req.params.userID;
+  let userID = req.params.userID;
 
   db.get('SELECT * FROM users where userID = ?', [userID], (err, row) => {
     if (err) {
@@ -64,8 +64,8 @@ app.get('/users/:userID', (req, res) => {
 
 // Create or update user information for userID
 app.post('/createUser', (req, res) => {
-  var userID = req.body.userID;
-  var nickName = req.body.nickName;
+  let userID = req.body.userID;
+  let nickName = req.body.nickName;
 
   if (userID == undefined
     || nickName == undefined) {
@@ -90,8 +90,8 @@ app.post('/createUser', (req, res) => {
 });
 
 app.post('/updateUser', (req, res) => {
-  var userID = req.body.userID;
-  var nickName = req.body.nickName;
+  let userID = req.body.userID;
+  let nickName = req.body.nickName;
 
   if (userID == undefined
     || nickName == undefined) {
@@ -114,7 +114,7 @@ app.post('/updateUser', (req, res) => {
 
 // Get the results of a specific user
 app.get('/results/:userID', (req, res) => {
-  var userID = req.params.userID;
+  let userID = req.params.userID;
 
   db.all('SELECT * FROM results WHERE userID = ?', [userID], (err, rows) => {
     if (err) {
@@ -128,8 +128,8 @@ app.get('/results/:userID', (req, res) => {
 
 // Get the results of a specific user at a specific station
 app.get('/results/:userID/:stationID', (req, res) => {
-  var userID = req.params.userID;
-  var stationID = req.params.stationID;
+  let userID = req.params.userID;
+  let stationID = req.params.stationID;
 
   db.all('SELECT * FROM results WHERE userID = ? AND stationID = ?', [userID, stationID], (err, rows) => {
     if (err) {
@@ -142,8 +142,8 @@ app.get('/results/:userID/:stationID', (req, res) => {
 });
 
 app.post('/deleteResult', (req, res) => {
-  var userID = req.body.userID;
-  var stationID = req.body.stationID;
+  let userID = req.body.userID;
+  let stationID = req.body.stationID;
   if (sessionID == undefined) {
     res.status(500).send("No Active Session");
   }
@@ -167,9 +167,9 @@ app.post('/deleteResult', (req, res) => {
 
 //For the leaderboard: Gets the session's user scores, tracking the number questions they've answered correctly and incorrectly.
 app.get('/leaderboard/:sessionID', (req, res) => {
-  var sessionID = req.params.sessionID;
+  let sessionID = req.params.sessionID;
 
-  var query = `SELECT users.userID, users.nickName, results.userAnswer as correct
+  let query = `SELECT users.userID, users.nickName, results.userAnswer as correct
                   FROM users
                   JOIN results ON users.userID=results.userID
                     JOIN stations ON results.stationID=stations.stationID
@@ -184,15 +184,15 @@ app.get('/leaderboard/:sessionID', (req, res) => {
       res.status(200).send([]);
     }
     else {
-      var leadResults = [];
-      var userID = null;
-      var nickName = null;
-      var numCorrect = null;
-      var numWrong = null;
+      let leadResults = [];
+      let userID = null;
+      let nickName = null;
+      let numCorrect = null;
+      let numWrong = null;
       rows.forEach((row) => {
         if (userID != row.userID) {
           if (userID != null) {
-            var userInfo = {
+            let userInfo = {
               "userID": userID,
               "nickName": nickName,
               "numCorrect": numCorrect,
@@ -214,7 +214,7 @@ app.get('/leaderboard/:sessionID', (req, res) => {
         }
       });
 
-      var userInfo = {
+      let userInfo = {
         "userID": userID,
         "nickName": nickName,
         "numCorrect": numCorrect,
@@ -231,10 +231,10 @@ app.get('/leaderboard/:sessionID', (req, res) => {
 // userDetail: Get a user's detailed status, including the answers they've given at each of the stations,
 // as well as information about the station.
 app.get('/userDetail/:sessionID/:userID', (req, res) => {
-  var sessionID = req.params.sessionID;
-  var userID = req.params.userID;
+  let sessionID = req.params.sessionID;
+  let userID = req.params.userID;
 
-  var query = `SELECT stationID, nickName, x_val, y_val, userAnswer as correct, timestamp
+  let query = `SELECT stationID, nickName, x_val, y_val, userAnswer as correct, timestamp
                 FROM stations
                 LEFT JOIN (SELECT stationID as rStationID, userAnswer, timestamp FROM results WHERE sessionID = ? AND userID = ?) ON rStationID = stations.stationID
                 JOIN (select nickName FROM users WHERE userID = ?)
@@ -248,8 +248,8 @@ app.get('/userDetail/:sessionID/:userID', (req, res) => {
       res.status(404).send("No results for user '" + String(userID) + "'");
     }
     else {
-      var convertRow = row => {
-        var answer;
+      let convertRow = row => {
+        let answer;
 
         if (row.timestamp == null) {
           answer = null;
@@ -269,8 +269,8 @@ app.get('/userDetail/:sessionID/:userID', (req, res) => {
         };
       };
 
-      var stations = rows.map(convertRow);
-      var userInfo = {
+      let stations = rows.map(convertRow);
+      let userInfo = {
         "userID": userID,
         "nickName": rows[0].nickName,
         "stations": stations
@@ -293,7 +293,7 @@ app.get('/stations', (req, res) => {
 });
 
 app.get('/stations/:stationID', (req, res) => {
-  var stationID = req.params.stationID;
+  let stationID = req.params.stationID;
   db.get(`SELECT * FROM stations WHERE stationID = ?`, [stationID], (err, row) => {
     if (err) {
       res.status(500).send(err);
@@ -309,12 +309,12 @@ app.get('/stations/:stationID', (req, res) => {
 
 // Create or update station information
 app.post('/createStation', (req, res) => {
-  var stationID = req.body.stationID;
-  var name = req.body.name;
-  var question = req.body.question;
-  var answer = req.body.answer;
-  var x_val = req.body.x_val;
-  var y_val = req.body.y_val;
+  let stationID = req.body.stationID;
+  let name = req.body.name;
+  let question = req.body.question;
+  let answer = req.body.answer;
+  let x_val = req.body.x_val;
+  let y_val = req.body.y_val;
 
   if (stationID == undefined
     || name == undefined
@@ -342,12 +342,12 @@ app.post('/createStation', (req, res) => {
 });
 
 app.post('/updateStation', (req, res) => {
-  var stationID = req.body.stationID;
-  var name = req.body.name;
-  var question = req.body.question;
-  var answer = req.body.answer;
-  var x_val = req.body.x_val;
-  var y_val = req.body.y_val;
+  let stationID = req.body.stationID;
+  let name = req.body.name;
+  let question = req.body.question;
+  let answer = req.body.answer;
+  let x_val = req.body.x_val;
+  let y_val = req.body.y_val;
 
   if (stationID == undefined
     || (name == undefined
@@ -397,8 +397,8 @@ const StrErrorUndefinedData = "Scavenger: ERROR" + ErrorUndefinedData;
 const StrErrorUserLockout = "Scavenger: ERROR" + ErrorUserLockout;
 
 app.get('/server-check', (req, res) => {
-  var nodeID = req.query.nodeID;
-  var time = req.query.time;
+  let nodeID = req.query.nodeID;
+  let time = req.query.time;
   console.log("ServerCheck ID: " + nodeID);
   //Just Acknowledge command received  - The NODE is just checking server is on-line
   //  before making other requests.
@@ -409,8 +409,8 @@ app.get('/server-check', (req, res) => {
 
 //http://127.0.0.1:3000/heartbeat?node=20&time=1000        //WORKS - YEA
 app.get('/heartbeat', (req, res) => {
-  var time = req.query.time;
-  var nodeID = req.query.nodeID; //either a value or undefined
+  let time = req.query.time;
+  let nodeID = req.query.nodeID; //either a value or undefined
 
   console.log("Heartbeat - nodeID: " + nodeID + " -- time: " + time);
 
@@ -438,10 +438,10 @@ app.get('/heartbeat', (req, res) => {
 });
 
 app.get('/config', (req, res) => {
-  var time = req.query.time;
-  var nodeID = req.query.nodeID;
-  var queryID = req.query.queryID;
-  var mac = req.query.MAC;
+  let time = req.query.time;
+  let nodeID = req.query.nodeID;
+  let queryID = req.query.queryID;
+  let mac = req.query.MAC;
 
   console.log("config - nodeID: " + nodeID + "- queryID: " + queryID + " - mac: " + mac);
 
@@ -479,11 +479,11 @@ app.get('/config', (req, res) => {
 });
 
 app.get('/validate', (req, res) => {
-  var timestamp = Date.now();
-  var stationID = req.query.nodeID;
+  let timestamp = Date.now();
+  let stationID = req.query.nodeID;
   // User ID is sent as decimal representation of the hex input, so parse it first
-  var userID = parseInt(req.query.userID);
-  var attemptAnswer = req.query.queryValue;
+  let userID = parseInt(req.query.userID);
+  let attemptAnswer = req.query.queryValue;
 
   if (stationID == undefined
     || Number.isNaN(userID)
@@ -517,7 +517,7 @@ app.get('/validate', (req, res) => {
         $maxNumAttempts: maxNumAttempts
       },
       function (err) {
-        var changedRows = this.changes;
+        let changedRows = this.changes;
         if (err) {
           res.status(500).send(err);
         }
