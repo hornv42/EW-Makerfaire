@@ -44,10 +44,10 @@ void draw() {
        text(" ( Updated every " + updateSeconds/1000 + " seconds.)", 20, 90);
   } else {
      values = loadJSONArray("http://167.99.118.99:3000/leaderBoard/" + sessionNo);
-     
+
      output = createWriter("./ResultsHTML.html");
      //output = createWriter("../../Power Point Stuff/ResultsHTML.html");
-     
+
      output.println("<!DOCTYPE html>");
      output.println("<html>");
      output.println("<head>");
@@ -55,25 +55,24 @@ void draw() {
      output.println("<META HTTP-EQUIV=\"refresh\" CONTENT=\"15\" >");
      output.println("</head>");
      output.println("<body>");
-     
+
      for (int i = 0; i < values.size(); i++) {
-       
+
        JSONObject ans = values.getJSONObject(i);
-       
+
        userID = ans.getInt("userID");
        nickName = ans.getString("nickName");
        numCorrect = ans.getInt("numCorrect");
        numIncorrect = ans.getInt("numIncorrect");
-       
-       output.println ("<p>"+nickName+" ("+userID+") </p>");
-       //output.println ("<p>"+nickName+" ("+userID+") Correct: "+numCorrect+"  InCorrect: "+numIncorrect+"</p>");
+
+       output.println ("<div class=\"result-entry\">" + nickName + " (" + numCorrect + ") </div>");
      }
      output.println("</body>");
      output.println("</html>");
-    
+
      output.flush();
      output.close();
-     
+
      delay(updateSeconds);
   }
 }
@@ -83,7 +82,7 @@ void draw() {
 //===========================================================================
 
 void keyPressed() {
-  
+
   // Type in Session number and then enter / return
   if (!gotSession) {
      if (key >= '0' && key <= '9') {
