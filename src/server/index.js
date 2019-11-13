@@ -5,7 +5,51 @@ const app = express();
 app.use(express.urlencoded());
 app.use('/static', express.static('static'));
 
-const db = new sqlite3.Database('./database.db');
+const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
+                                err => {
+                                  if (err) {
+                                    console.error("Error opening/creating database: " + err.message);
+                                  }
+                                  else {
+                                    // Ensure the tables exist
+                                    db.run(`CREATE TABLE IF NOT EXISTS "users"
+                                              (
+                                                "userID" INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                 "nickName" TEXT
+                                              )`, err => {
+                                                if (err) {
+                                                  console.error("Error creating users table: " + err.message);
+                                                }
+                                              });
+                                    db.run(`CREATE TABLE IF NOT EXISTS "stations"
+                                              (
+                                                "stationID" INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                "name" TEXT,
+                                                "question" TEXT,
+                                                 "answer" TEXT,
+                                                 "x_val" REAL,
+                                                 "y_val" REAL
+                                              )`, err => {
+                                                if (err) {
+                                                  console.error("Error creating stations table: " + err.message);
+                                                }
+                                              });
+                                    db.run(`CREATE TABLE IF NOT EXISTS "results"
+                                             (
+                                               "sessionID" INTEGER,
+                                               "userID" INTEGER,
+                                               "stationID" INTEGER,
+                                               "userAnswer" INTEGER,
+                                               "timestamp" INTEGER,
+                                               "numAttempts" INTEGER,
+                                               PRIMARY KEY("userID","stationID","sessionID")
+                                             )`, err => {
+                                               if (err) {
+                                                 console.error("Error creating results table: " + err.message);
+                                               }
+                                             });
+                                  }
+                                });
 const port = 3000;
 const maxNumAttempts = 3;
 
